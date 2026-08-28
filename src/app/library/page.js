@@ -1,95 +1,102 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { EXDB, CATS } from "@/data/db";
 import ExerciseModal from "@/components/ExerciseModal";
+import AuthGate from "@/components/AuthGate";
 
-export default function Library() {
-  const [filterCat, setFilterCat] = useState("all");
-  const [filterLv, setFilterLv] = useState(0);
+function LibraryContent() {
+  const searchParams = useSearchParams();
+  const initialCat = searchParams.get("cat") || "all";
+
+  const [selectedCat, setSelectedCat] = useState(initialCat);
   const [query, setQuery] = useState("");
   const [selectedEx, setSelectedEx] = useState(null);
 
-  const q = query.toLowerCase();
-  const list = EXDB.filter(
-    (e) =>
-      (filterCat === "all" || e.cat === filterCat) &&
-      (!filterLv || e.lv === filterLv) &&
-      (!q || (e.n + " " + e.ms + " " + e.d).toLowerCase().includes(q))
-  );
+  const filtered = EXDB.filter((e) => {
+    const mCat = selectedCat === "all" || e.cat === selectedCat;
+    const mQ = !query || e.n.toLowerCase().includes(query.toLowerCase()) || e.t.toLowerCase().includes(query.toLowerCase());
+    return mCat && mQ;
+  });
 
   return (
     <div className="vw active" id="v-library">
-      <h1 className="pg">Exercise Library</h1>
+      <h1 className="pg">Movement Library</h1>
       <p className="sub">
-        The encyclopedia: {EXDB.length} movements with cues, common mistakes, regression → progression paths, and AI video form coaches.
+        Form is not a suggestion. Search any exercise, click to open slow-motion video analysis, muscle activation maps, and form checklists.
       </p>
 
       <div className="filters">
         <button
-          className={`fbtn ${filterCat === "all" ? "on" : ""}`}
-          onClick={() => setFilterCat("all")}
+          className={`fbtn ${selectedCat === "all" ? "on" : ""}`}
+          onClick={() => setSelectedCat("all")}
         >
-          All
+          All Movements ({EXDB.length})
         </button>
         {Object.entries(CATS).map(([k, v]) => (
           <button
             key={k}
-            className={`fbtn ${filterCat === k ? "on" : ""}`}
-            onClick={() => setFilterCat(k)}
+            className={`fbtn ${selectedCat === k ? "on" : ""}`}
+            onClick={() => setSelectedCat(k)}
           >
             {v.n}
           </button>
         ))}
-      </div>
-
-      <div className="filters">
-        {["All levels", "Beginner", "Intermediate", "Advanced"].map((t, i) => (
-          <button
-            key={i}
-            className={`fbtn ${filterLv === i ? "on" : ""}`}
-            onClick={() => setFilterLv(i)}
-          >
-            {t}
-          </button>
-        ))}
         <input
           id="q"
-          placeholder="Search exercises… (try: planche)"
+          placeholder="Search exercises, cues, muscles..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
 
       <div className="grid g3">
-        {list.length > 0 ? (
-          list.map((e) => (
-            <div
-              key={e.id}
-              className="card cl"
-              onClick={() => setSelectedEx(e)}
-              style={e.cat === "calis" ? { borderColor: "#3a2a1d" } : {}}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "6px", flexWrap: "wrap" }}>
-                <span className="pill">
-                  <span className="d" style={{ background: CATS[e.cat]?.c }}></span>
-                  {CATS[e.cat]?.n}
-                </span>
-                <span className={`pill lv${e.lv}`}>{"●".repeat(e.lv)} L{e.lv}</span>
-              </div>
-              <b style={{ display: "block", marginTop: "8px" }}>
-                {e.cat === "calis" ? "🤸 " : ""}
-                {e.n}
-              </b>
-              <div className="mut sm">{e.ms}</div>
-              <div className="mut sm">🧰 {e.eq}</div>
+        {filtered.map((e) => (
+          <div
+            key={e.id}
+            className="card cl"
+            onClick={() => setSelectedEx(e)}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="pill">
+                <span className="d" style={{ background: CATS[e.cat]?.c }}></span>
+                {CATS[e.cat]?.n}
+              </span>
+              <span className={`pill lv${e.lv}`}>{"●".repeat(e.lv)} L{e.lv}</span>
             </div>
-          ))
-        ) : (
-          <p className="mut">No matches — try clearing filters.</p>
-        )}
+            <b style={{ display: "block", fontSize: "17px", margin: "8px 0 4px" }}>
+              {e.n}
+            </b>
+            <div className="mut sm">{e.t}</div>
+            <div style={{ marginTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="mut sm" style={{ fontSize: "11px" }}>{e.cu?.length || 0} form cues</span>
+              <button className="btn gh sm" style={{ fontSize: "11px", padding: "4px 8px" }}>
+                Analyze 🎬
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <ExerciseModal exercise={selectedEx} onClose={() => setSelectedEx(null)} />
+      <ExerciseModal
+        exercise={selectedEx}
+        onClose={() => setSelectedEx(null)}
+        onSelectExercise={(ex) => setSelectedEx(ex)}
+      />
     </div>
+  );
+}
+
+export default function Library() {
+  return (
+    <AuthGate
+      title="Movement Library"
+      subtitle="Sign in to browse 35+ exercise breakdowns, target joint angles, and slow-motion video analysis."
+      icon="📚"
+    >
+      <Suspense fallback={<div className="mut sm" style={{ padding: "40px", textAlign: "center" }}>Loading movement library...</div>}>
+        <LibraryContent />
+      </Suspense>
+    </AuthGate>
   );
 }

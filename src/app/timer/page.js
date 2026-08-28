@@ -1,207 +1,190 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useFitness } from "@/context/FitnessContext";
+import AuthGate from "@/components/AuthGate";
 
-const CIRC = 2 * Math.PI * 104;
+export default function Timer() {
+  const { playBeep } = useFitness();
 
-export default function IntervalTimer() {
-  const { sound, setSound, playBeep } = useFitness();
-
-  const [prep, setPrep] = useState(10);
-  const [work, setWork] = useState(40);
-  const [rest, setRest] = useState(20);
+  const [workSec, setWorkSec] = useState(30);
+  const [restSec, setRestSec] = useState(15);
   const [rounds, setRounds] = useState(8);
 
-  const [phase, setPhase] = useState("idle"); // idle, prep, work, rest, done
-  const [rem, setRem] = useState(0);
-  const [currentRound, setCurrentRound] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+  const [curPhase, setCurPhase] = useState("IDLE"); // IDLE, WORK, REST, DONE
+  const [curRound, setCurRound] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [totalElapsed, setTotalElapsed] = useState(0);
 
   const intervalRef = useRef(null);
 
-  const loadPreset = (name, w, r, n) => {
-    setWork(w);
-    setRest(r);
-    setRounds(n);
-  };
-
-  const estMins = Math.max(0, Math.round((prep + (work + rest) * rounds) / 60));
+  const totalDuration = rounds * (workSec + restSec);
+  const progressPct = totalDuration ? Math.min(1, totalElapsed / totalDuration) : 0;
+  const strokeDashoffset = 628 * (1 - (timeLeft / (curPhase === "WORK" ? workSec : restSec || 1)));
 
   const startTimer = () => {
-    if (isRunning) {
-      setIsRunning(false);
-      clearInterval(intervalRef.current);
-      return;
-    }
-
-    if (phase === "idle" || phase === "done") {
-      setPhase("prep");
-      setCurrentRound(0);
-      setRem(prep || 1);
-    }
-
-    setIsRunning(true);
+    setCurPhase("WORK");
+    setCurRound(1);
+    setTimeLeft(workSec);
+    setTotalElapsed(0);
+    playBeep(880, 0.2);
   };
 
-  const resetTimer = () => {
-    setIsRunning(false);
+  const stopTimer = () => {
+    setCurPhase("IDLE");
     clearInterval(intervalRef.current);
-    setPhase("idle");
-    setCurrentRound(0);
-    setRem(0);
+  };
+
+  const applyPreset = (w, r, rnd) => {
+    stopTimer();
+    setWorkSec(w);
+    setRestSec(r);
+    setRounds(rnd);
+    setTimeLeft(w);
   };
 
   useEffect(() => {
-    if (!isRunning) {
+    if (curPhase === "WORK" || curPhase === "REST") {
+      intervalRef.current = setInterval(() => {
+        setTotalElapsed((prev) => prev + 1);
+        setTimeLeft((prev) => {
+          if (prev <= 4 && prev > 1) {
+            playBeep(660, 0.08);
+          }
+          if (prev <= 1) {
+            if (curPhase === "WORK") {
+              if (curRound >= rounds) {
+                setCurPhase("DONE");
+                playBeep(1200, 0.4);
+                clearInterval(intervalRef.current);
+                return 0;
+              } else {
+                setCurPhase("REST");
+                playBeep(440, 0.25);
+                return restSec;
+              }
+            } else {
+              setCurRound((r) => r + 1);
+              setCurPhase("WORK");
+              playBeep(880, 0.25);
+              return workSec;
+            }
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
       clearInterval(intervalRef.current);
-      return;
     }
 
-    intervalRef.current = setInterval(() => {
-      setRem((prev) => {
-        if (prev <= 1) {
-          // Transition
-          if (phase === "prep") {
-            setPhase("work");
-            playBeep(880, 0.3);
-            return work;
-          } else if (phase === "work") {
-            const nextRound = currentRound + 1;
-            if (nextRound >= rounds) {
-              setPhase("done");
-              setIsRunning(false);
-              playBeep(880, 0.15);
-              setTimeout(() => playBeep(1200, 0.3), 200);
-              return 0;
-            }
-            setCurrentRound(nextRound);
-            setPhase("rest");
-            playBeep(440, 0.3);
-            return rest || 1;
-          } else if (phase === "rest") {
-            setPhase("work");
-            playBeep(880, 0.3);
-            return work;
-          }
-        } else if (prev <= 4) {
-          playBeep(660, 0.08);
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
     return () => clearInterval(intervalRef.current);
-  }, [isRunning, phase, currentRound, work, rest, rounds, prep]);
-
-  const maxTime = phase === "work" ? work : phase === "rest" ? rest || 1 : prep || 1;
-  const strokeOffset = phase === "done" ? 0 : phase === "idle" ? 0 : CIRC - CIRC * (rem / (maxTime || 1));
+  }, [curPhase, curRound, rounds, workSec, restSec]);
 
   return (
-    <div className="vw active" id="v-timer">
-      <h1 className="pg">
-        Interval <em>Timer</em>
-      </h1>
-      <p className="sub">For Tabata, circuits, sprints — anything that repeats.</p>
+    <AuthGate
+      title="Interval Timer"
+      subtitle="Sign in to use customizable Tabata, EMOM, and HIIT interval audio timers."
+      icon="⏱"
+    >
+      <div className="vw active" id="v-timer">
+        <h1 className="pg">Interval Timer</h1>
+        <p className="sub">
+          Tabata, EMOM, or custom interval rounds with audio cadences. Set work, set rest, hit start.
+        </p>
 
-      <div className="tgrid">
-        <div className="card">
-          <div className="fr" style={{ flexDirection: "column", alignItems: "stretch", gap: "10px" }}>
-            <div className="tf">
-              <span>Prep (s)</span>
-              <input
-                type="number"
-                value={prep}
-                min="0"
-                onChange={(e) => setPrep(Math.max(0, +e.target.value || 0))}
-              />
+        <div className="tgrid">
+          {/* Controls column */}
+          <div className="card">
+            <h3 style={{ fontSize: "18px", marginBottom: "14px" }}>Settings</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div className="tf">
+                Work (seconds)
+                <input
+                  type="number"
+                  value={workSec}
+                  onChange={(e) => setWorkSec(Math.max(5, parseInt(e.target.value, 10) || 5))}
+                  disabled={curPhase !== "IDLE"}
+                />
+              </div>
+              <div className="tf">
+                Rest (seconds)
+                <input
+                  type="number"
+                  value={restSec}
+                  onChange={(e) => setRestSec(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  disabled={curPhase !== "IDLE"}
+                />
+              </div>
+              <div className="tf">
+                Total Rounds
+                <input
+                  type="number"
+                  value={rounds}
+                  onChange={(e) => setRounds(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  disabled={curPhase !== "IDLE"}
+                />
+              </div>
             </div>
-            <div className="tf">
-              <span>Work (s)</span>
-              <input
-                type="number"
-                value={work}
-                min="0"
-                onChange={(e) => setWork(Math.max(0, +e.target.value || 0))}
-              />
+
+            <div style={{ marginTop: "18px", display: "flex", gap: "8px" }}>
+              {curPhase === "IDLE" || curPhase === "DONE" ? (
+                <button className="btn" style={{ flex: 1, justifyContent: "center" }} onClick={startTimer}>
+                  ▶ Start Timer
+                </button>
+              ) : (
+                <button className="btn gh" style={{ flex: 1, justifyContent: "center" }} onClick={stopTimer}>
+                  ⏹ Reset
+                </button>
+              )}
             </div>
-            <div className="tf">
-              <span>Rest (s)</span>
-              <input
-                type="number"
-                value={rest}
-                min="0"
-                onChange={(e) => setRest(Math.max(0, +e.target.value || 0))}
-              />
-            </div>
-            <div className="tf">
-              <span>Rounds</span>
-              <input
-                type="number"
-                value={rounds}
-                min="1"
-                onChange={(e) => setRounds(Math.max(1, +e.target.value || 1))}
-              />
-            </div>
-          </div>
 
-          <div className="filters" style={{ marginTop: "12px" }}>
-            <button className="fbtn" onClick={() => loadPreset("Tabata", 20, 10, 8)}>
-              Tabata (20/10)
-            </button>
-            <button className="fbtn" onClick={() => loadPreset("HIIT", 40, 20, 6)}>
-              HIIT (40/20)
-            </button>
-            <button className="fbtn" onClick={() => loadPreset("Strength", 60, 90, 5)}>
-              Strength (60/90)
-            </button>
-            <button className="fbtn" onClick={() => setSound(!sound)}>
-              {sound ? "🔊 Sound on" : "🔇 Sound off"}
-            </button>
-          </div>
-
-          <div className="mut sm" style={{ marginTop: "10px" }}>
-            ~{estMins} min total workout time
-          </div>
-        </div>
-
-        <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <div className={`ph ${phase === "work" ? "WORK" : phase === "rest" ? "REST" : "prep"}`}>
-            {phase === "idle" ? "READY" : phase === "done" ? "DONE" : phase.toUpperCase()}
-          </div>
-
-          <div className="ring">
-            <svg width="240" height="240">
-              <circle cx="120" cy="120" r="104" stroke="var(--ln)" stroke-width="10" fill="none" />
-              <circle
-                cx="120"
-                cy="120"
-                r="104"
-                stroke="var(--acc)"
-                stroke-width="10"
-                fill="none"
-                stroke-linecap="round"
-                strokeDasharray={CIRC}
-                strokeDashoffset={strokeOffset}
-              />
-            </svg>
-            <div className="cin">
-              <b>{phase === "done" ? "🔥" : phase === "idle" ? "—" : Math.max(0, rem)}</b>
-              <span className="mut sm">
-                {phase === "done" ? "Circuit complete" : phase !== "idle" ? `Round ${Math.min(currentRound + 1, rounds)} / ${rounds}` : ""}
-              </span>
+            <div style={{ marginTop: "20px" }}>
+              <span className="mut sm">Presets:</span>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "8px" }}>
+                <button className="pill" onClick={() => applyPreset(20, 10, 8)}>
+                  Tabata 20/10 ×8
+                </button>
+                <button className="pill" onClick={() => applyPreset(40, 20, 10)}>
+                  HIIT 40/20 ×10
+                </button>
+                <button className="pill" onClick={() => applyPreset(45, 15, 6)}>
+                  Core 45/15 ×6
+                </button>
+              </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
-            <button className="btn" onClick={startTimer}>
-              {isRunning ? "⏸ PAUSE" : phase === "done" ? "▶ RESTART" : "▶ START"}
-            </button>
-            <button className="btn gh" onClick={resetTimer}>
-              ↺ Reset
-            </button>
+          {/* Clock circle column */}
+          <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "320px" }}>
+            <div className="ring">
+              <svg width="240" height="240" viewBox="0 0 240 240">
+                <circle cx="120" cy="120" r="100" stroke="var(--ln)" strokeWidth="12" fill="none" />
+                <circle
+                  cx="120"
+                  cy="120"
+                  r="100"
+                  stroke={curPhase === "REST" ? "var(--ok)" : "var(--acc)"}
+                  strokeWidth="12"
+                  fill="none"
+                  strokeDasharray="628"
+                  strokeDashoffset={isNaN(strokeDashoffset) ? 0 : strokeDashoffset}
+                  strokeLinecap="round"
+                  style={{ transition: "stroke-dashoffset 0.25s linear" }}
+                />
+              </svg>
+
+              <div className="cin">
+                <span className={`ph ${curPhase === "WORK" ? "WORK" : curPhase === "REST" ? "REST" : ""}`} style={{ fontSize: "14px" }}>
+                  {curPhase === "IDLE" ? "READY" : curPhase}
+                </span>
+                <b>{curPhase === "IDLE" ? workSec : timeLeft}</b>
+                <span className="mut sm">
+                  {curPhase === "IDLE" ? "Tap Start" : `Round ${curRound} / ${rounds}`}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AuthGate>
   );
 }
