@@ -124,7 +124,14 @@ export default function Programs() {
                 <div style={{ padding: "18px" }}>
                   <p className="mut sm">{p.focus} · {p.wks}</p>
 
-                  <div className="grid g3" style={{ marginTop: "14px" }}>
+                  <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+                    gap: "8px",
+                    marginTop: "14px"
+                  }}
+                >
                     {p.days.map(([d, wId], idx) => {
                       const w = WORKOUTS.find((item) => item.id === wId);
                       return wId === "rest" ? (
