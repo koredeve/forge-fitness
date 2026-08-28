@@ -4,7 +4,6 @@ import { PROGRAMS, WORKOUTS, CATS } from "@/data/db";
 import { useFitness } from "@/context/FitnessContext";
 import { useAuth } from "@/context/AuthContext";
 import WorkoutModal from "@/components/WorkoutModal";
-import ProModal from "@/components/ProModal";
 import AuthGate from "@/components/AuthGate";
 
 const PROGRAM_BANNERS = {
@@ -18,16 +17,13 @@ const FREE_PROGRAMS = ["p1"];
 
 export default function Programs() {
   const { startWorkout } = useFitness();
-  const { isPro } = useAuth();
+  const { isPro, openProModal } = useAuth();
   const [selectedWorkout, setSelectedWorkout] = useState(null);
-  const [proModalOpen, setProModalOpen] = useState(false);
-  const [lockedProgramName, setLockedProgramName] = useState("");
 
   const handleProgramAction = (pId, pName, wId) => {
     const isLocked = !isPro && !FREE_PROGRAMS.includes(pId);
     if (isLocked) {
-      setLockedProgramName(pName);
-      setProModalOpen(true);
+      openProModal(pName);
       return;
     }
     const w = WORKOUTS.find((item) => item.id === wId);
@@ -37,8 +33,7 @@ export default function Programs() {
   const handleDirectStart = (pId, pName, wId) => {
     const isLocked = !isPro && !FREE_PROGRAMS.includes(pId);
     if (isLocked) {
-      setLockedProgramName(pName);
-      setProModalOpen(true);
+      openProModal(pName);
       return;
     }
     startWorkout(wId);
@@ -68,10 +63,7 @@ export default function Programs() {
                 padding: "10px 18px",
                 fontSize: "13px"
               }}
-              onClick={() => {
-                setLockedProgramName("All Advanced Workout Programs");
-                setProModalOpen(true);
-              }}
+              onClick={() => openProModal("All Advanced Workout Programs")}
             >
               👑 Unlock All Programs with PRO
             </button>
@@ -176,12 +168,6 @@ export default function Programs() {
         <WorkoutModal
           workout={selectedWorkout}
           onClose={() => setSelectedWorkout(null)}
-        />
-
-        <ProModal
-          isOpen={proModalOpen}
-          onClose={() => setProModalOpen(false)}
-          featureName={lockedProgramName}
         />
       </div>
     </AuthGate>

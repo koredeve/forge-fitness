@@ -1,6 +1,7 @@
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import WorkoutPlayer from "@/components/WorkoutPlayer";
+import GlobalModals from "@/components/GlobalModals";
 import { AuthProvider } from "@/context/AuthContext";
 import { FitnessProvider } from "@/context/FitnessContext";
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
             <Navbar />
             <main>{children}</main>
             <WorkoutPlayer />
+            <GlobalModals />
           </FitnessProvider>
         </AuthProvider>
       </body>

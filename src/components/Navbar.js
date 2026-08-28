@@ -1,16 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import AuthModal from "./AuthModal";
-import ProModal from "./ProModal";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, logout, isPro } = useAuth();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [proModalOpen, setProModalOpen] = useState(false);
+  const { user, logout, isPro, openAuthModal, openProModal } = useAuth();
 
   const links = [
     { href: "/", label: "🏠 Home" },
@@ -48,7 +44,7 @@ export default function Navbar() {
                 fontSize: "12px",
                 padding: "6px 12px"
               }}
-              onClick={() => setProModalOpen(true)}
+              onClick={() => openProModal("All Master Calisthenics Trees & Roadmaps")}
             >
               👑 Get PRO
             </button>
@@ -78,16 +74,13 @@ export default function Navbar() {
             <button
               className="btn sm gh"
               style={{ padding: "6px 12px", fontSize: "12px" }}
-              onClick={() => setAuthModalOpen(true)}
+              onClick={() => openAuthModal("Sign in to save your streaks, track skill mastery, and unlock full workouts.")}
             >
               🔐 Sign In
             </button>
           )}
         </div>
       </div>
-
-      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
-      <ProModal isOpen={proModalOpen} onClose={() => setProModalOpen(false)} />
     </header>
   );
 }

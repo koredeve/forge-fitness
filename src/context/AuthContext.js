@@ -20,6 +20,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [isPro, setIsPro] = useState(false);
 
+  // Global Modals State
+  const [authModalState, setAuthModalState] = useState({ isOpen: false, subtitle: "", defaultMode: "signin" });
+  const [proModalState, setProModalState] = useState({ isOpen: false, featureName: "" });
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -75,8 +79,41 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const openAuthModal = (subtitle = "", defaultMode = "signin") => {
+    setAuthModalState({ isOpen: true, subtitle, defaultMode });
+  };
+
+  const closeAuthModal = () => {
+    setAuthModalState((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const openProModal = (featureName = "") => {
+    setProModalState({ isOpen: true, featureName });
+  };
+
+  const closeProModal = () => {
+    setProModalState((prev) => ({ ...prev, isOpen: false }));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, isPro, setProPlan, login, signup, loginWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isPro,
+        setProPlan,
+        login,
+        signup,
+        loginWithGoogle,
+        logout,
+        authModalState,
+        openAuthModal,
+        closeAuthModal,
+        proModalState,
+        openProModal,
+        closeProModal
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

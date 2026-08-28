@@ -1,11 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "@/context/AuthContext";
-import AuthModal from "./AuthModal";
 
 export default function AuthGate({ title, subtitle, icon = "🔐", children }) {
-  const { user, loading } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
+  const { user, loading, openAuthModal } = useAuth();
 
   if (loading) {
     return (
@@ -47,7 +45,7 @@ export default function AuthGate({ title, subtitle, icon = "🔐", children }) {
             <button
               className="btn"
               style={{ justifyContent: "center", padding: "14px", fontSize: "15px", boxShadow: "0 6px 24px rgba(255, 107, 44, 0.4)" }}
-              onClick={() => setAuthOpen(true)}
+              onClick={() => openAuthModal(`Sign in or create a free account to access ${title || "FORGE features"}.`)}
             >
               🔐 Sign In / Create Free Account →
             </button>
@@ -59,12 +57,6 @@ export default function AuthGate({ title, subtitle, icon = "🔐", children }) {
             <span>✔ Cloud Sync</span>
           </div>
         </div>
-
-        <AuthModal
-          isOpen={authOpen}
-          onClose={() => setAuthOpen(false)}
-          subtitle={`Sign in or create a free account to access ${title || "FORGE features"}.`}
-        />
       </div>
     );
   }

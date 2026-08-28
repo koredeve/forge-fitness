@@ -5,7 +5,6 @@ import { CATS, WORKOUTS } from "@/data/db";
 import { useFitness } from "@/context/FitnessContext";
 import { useAuth } from "@/context/AuthContext";
 import WorkoutModal from "@/components/WorkoutModal";
-import AuthModal from "@/components/AuthModal";
 
 const CATEGORY_IMAGES = {
   calis: "/illustrations/muscleup.jpg",
@@ -44,11 +43,9 @@ const FAQS = [
 ];
 
 export default function Home() {
-  const { logs, getStreak, getSkillsPct, startWorkout } = useFitness();
-  const { user } = useAuth();
+  const { logs, getStreak, getSkillsPct } = useFitness();
+  const { user, openAuthModal } = useAuth();
   const [previewWorkout, setPreviewWorkout] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authSubtitle, setAuthSubtitle] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
 
   const streak = getStreak();
@@ -67,8 +64,7 @@ export default function Home() {
 
   const handleStartWorkout = () => {
     if (!user) {
-      setAuthSubtitle("Create a free account or sign in to start guided workouts and save your streaks!");
-      setAuthModalOpen(true);
+      openAuthModal("Create a free account or sign in to start guided workouts and save your streaks!");
       return;
     }
     setPreviewWorkout(ignitionWorkout);
@@ -164,10 +160,7 @@ export default function Home() {
           </div>
           <button
             className="btn sm"
-            onClick={() => {
-              setAuthSubtitle("Sign in to save your streaks, track skill mastery, and unlock full workouts.");
-              setAuthModalOpen(true);
-            }}
+            onClick={() => openAuthModal("Sign in to save your streaks, track skill mastery, and unlock full workouts.")}
           >
             Sign In / Register →
           </button>
@@ -334,13 +327,6 @@ export default function Home() {
       <WorkoutModal
         workout={previewWorkout}
         onClose={() => setPreviewWorkout(null)}
-      />
-
-      {/* Sleek Auth Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        subtitle={authSubtitle}
       />
     </div>
   );

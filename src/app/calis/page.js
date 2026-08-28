@@ -6,7 +6,6 @@ import { useAuth } from "@/context/AuthContext";
 import SkillTreeVisual from "@/components/SkillTreeVisual";
 import WorkoutModal from "@/components/WorkoutModal";
 import ExerciseModal from "@/components/ExerciseModal";
-import ProModal from "@/components/ProModal";
 import AuthGate from "@/components/AuthGate";
 
 // Free tier access list (Pull-Up & Dip up to Lv2)
@@ -14,15 +13,13 @@ const FREE_SKILLS = ["pullup", "dip"];
 
 export default function Calis() {
   const { skills, toggleSkill, getSkillsPct, startWorkout } = useFitness();
-  const { isPro } = useAuth();
+  const { isPro, openProModal } = useAuth();
 
   const [openSkills, setOpenSkills] = useState({
     pullup: true
   });
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [selectedEx, setSelectedEx] = useState(null);
-  const [proModalOpen, setProModalOpen] = useState(false);
-  const [lockedFeatureName, setLockedFeatureName] = useState("");
 
   const toggleOpen = (id) => {
     setOpenSkills((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -43,8 +40,7 @@ export default function Calis() {
   const handleLevelClick = (skillId, levelIdx, skillName) => {
     const isLevelLocked = !isPro && (!FREE_SKILLS.includes(skillId) || levelIdx >= 2);
     if (isLevelLocked) {
-      setLockedFeatureName(`${skillName} (Level ${levelIdx + 1})`);
-      setProModalOpen(true);
+      openProModal(`${skillName} (Level ${levelIdx + 1})`);
       return;
     }
     toggleSkill(skillId, levelIdx);
@@ -76,10 +72,7 @@ export default function Calis() {
                 padding: "10px 18px",
                 fontSize: "13px"
               }}
-              onClick={() => {
-                setLockedFeatureName("All Calisthenics Master Trees");
-                setProModalOpen(true);
-              }}
+              onClick={() => openProModal("All Calisthenics Master Trees")}
             >
               👑 Unlock All Skills with PRO
             </button>
@@ -263,13 +256,6 @@ export default function Calis() {
           exercise={selectedEx}
           onClose={() => setSelectedEx(null)}
           onSelectExercise={(ex) => setSelectedEx(ex)}
-        />
-
-        {/* PRO Paywall Modal */}
-        <ProModal
-          isOpen={proModalOpen}
-          onClose={() => setProModalOpen(false)}
-          featureName={lockedFeatureName}
         />
       </div>
     </AuthGate>
