@@ -47,8 +47,16 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
       await loginWithGoogle();
       onClose();
     } catch (err) {
-      console.error(err);
-      setError("Google authentication cancelled or not enabled in Firebase.");
+      console.error("Google Auth Error:", err);
+      if (err.code === "auth/unauthorized-domain") {
+        setError("Domain not authorized. Please add 'forge-mvp-three.vercel.app' to Firebase Console -> Authentication -> Settings -> Authorized domains.");
+      } else if (err.code === "auth/popup-closed-by-user") {
+        setError("Google sign-in popup was closed before completing.");
+      } else if (err.code === "auth/operation-not-allowed" || err.code === "auth/configuration-not-found") {
+        setError("Google Sign-In is not enabled yet. Please enable 'Google' in Firebase Console -> Authentication -> Sign-in method.");
+      } else {
+        setError(err.message || "Google authentication failed. Please try Email/Password or check Firebase settings.");
+      }
     } finally {
       setLoading(false);
     }
@@ -61,7 +69,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 250,
+        zIndex: 999,
         padding: "16px"
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -88,7 +96,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
         </button>
 
         {/* Logo & Title */}
-        <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        <div style={{ textAlign: "center", marginBottom: "18px" }}>
           <div className="logo" style={{ fontSize: "24px", margin: "0 0 6px" }}>
             FORGE<i>.</i>
           </div>
@@ -108,7 +116,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
             background: "rgba(11, 13, 16, 0.8)",
             padding: "4px",
             borderRadius: "10px",
-            marginBottom: "18px",
+            marginBottom: "16px",
             border: "1px solid var(--ln)"
           }}
         >
@@ -221,7 +229,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
               justifyContent: "center",
               padding: "12px",
               fontSize: "14px",
-              marginTop: "6px",
+              marginTop: "4px",
               opacity: loading ? 0.7 : 1
             }}
           >
@@ -233,7 +241,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
           style={{
             display: "flex",
             alignItems: "center",
-            margin: "18px 0",
+            margin: "16px 0",
             gap: "10px"
           }}
         >
