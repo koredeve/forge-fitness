@@ -1,69 +1,347 @@
-import Image from "next/image";
+"use client";
+import React, { useState } from "react";
+import Link from "next/link";
+import { CATS, WORKOUTS } from "@/data/db";
+import { useFitness } from "@/context/FitnessContext";
+import { useAuth } from "@/context/AuthContext";
+import WorkoutModal from "@/components/WorkoutModal";
+
+const CATEGORY_IMAGES = {
+  calis: "/illustrations/muscleup.jpg",
+  weights: "/banners/weights.jpg",
+  hiit: "/banners/strength.jpg",
+  cardio: "/banners/foundation.jpg",
+  core: "/illustrations/lsit.jpg",
+  mobility: "/illustrations/hstand.jpg"
+};
 
 export default function Home() {
+  const { logs, getStreak, getSkillsPct, startWorkout } = useFitness();
+  const { user } = useAuth();
+  const [previewWorkout, setPreviewWorkout] = useState(null);
+
+  const streak = getStreak();
+  const mastery = getSkillsPct();
+  const total = logs.length;
+  const wk = logs.filter((s) => Date.now() - new Date(s.d).getTime() < 7 * 864e5).length;
+
+  const dateStr = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "short",
+    day: "numeric"
+  });
+
+  const mqText = ("PULL-UP · MUSCLE-UP · PLANCHE · FRONT LEVER · HANDSTAND · L-SIT · PISTOL · ").repeat(3);
+  const ignitionWorkout = WORKOUTS.find((w) => w.id === "w1");
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="vw active" id="v-home">
+      {/* Cinematic Hero Section with High-Res Photography */}
+      <div
+        style={{
+          position: "relative",
+          borderRadius: "24px",
+          overflow: "hidden",
+          border: "1px solid var(--ln)",
+          marginBottom: "24px",
+          background: "#000"
+        }}
+      >
+        <img
+          src="/banners/hero.jpg"
+          alt="Calisthenics Athlete"
+          style={{
+            width: "100%",
+            height: "360px",
+            objectFit: "cover",
+            opacity: 0.45,
+            filter: "contrast(115%) brightness(90%)",
+            display: "block"
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
+
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(180deg, rgba(11, 13, 16, 0.15) 0%, rgba(11, 13, 16, 0.95) 100%)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+            padding: "24px 28px"
+          }}
+        >
+          <div className="kick" style={{ alignSelf: "flex-start", marginBottom: "8px" }}>
+            🔥 TODAY · {dateStr} {user ? `· ☁️ ${user.email.split("@")[0]}` : "· ⚡ Guest Mode"}
+          </div>
+
+          <h1 className="pg" style={{ margin: "4px 0" }}>
+            Own your<br />
+            <em>bodyweight.</em>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+          <p className="sub" style={{ margin: "6px 0 16px", maxWidth: "600px" }}>
+            FORGE is built calisthenics-first: your body is the barbell. Master bodyweight physics, climb the skill trees, and unlock elite relative strength.
+          </p>
+
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <button
+              className="btn"
+              onClick={() => setPreviewWorkout(ignitionWorkout)}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              ▶ Start: Full Body Ignition
+            </button>
+            <Link href="/calis" className="btn gh">
+              🤸 Open Calisthenics Hub
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Reactive Live Stats */}
+      <div className="stats" style={{ marginTop: 0 }}>
+        <div className="stat">
+          <b>{streak}</b>
+          <span>Day streak</span>
+        </div>
+        <div className="stat">
+          <b>{wk}</b>
+          <span>Sessions / 7d</span>
+        </div>
+        <div className="stat">
+          <b>{total}</b>
+          <span>Total sessions</span>
+        </div>
+        <div className="stat">
+          <b>{mastery}%</b>
+          <span>Skill mastery</span>
+        </div>
+      </div>
+
+      <div className="mq">
+        <div>{mqText}</div>
+      </div>
+
+      <div className="sect">
+        <h2>Train Your Way</h2>
+        <span className="mut">Calisthenics leads the pack</span>
+      </div>
+
+      {/* Responsive Category Grid with Visual Artwork Backgrounds */}
+      <div className="homecats">
+        {/* 1. Calisthenics Focus Card */}
+        <Link
+          href="/calis"
+          className="mtile cl"
+          style={{
+            background: "linear-gradient(180deg, rgba(58, 28, 10, 0.4) 0%, rgba(20, 23, 28, 0.95) 100%)"
+          }}
+        >
+          <img
+            src={CATEGORY_IMAGES.calis}
+            alt="Calisthenics"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.38,
+              zIndex: 1
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span className="cali-acc">⭐ FOCUS CATEGORY</span>
+            <br />
+            <b style={{ fontSize: "20px" }}>Calisthenics</b>
+            <small>Skill trees · progressions · bodyweight mastery</small>
+          </div>
+        </Link>
+
+        {/* 2. Weights */}
+        <Link
+          href="/library?cat=weights"
+          className="mtile cl"
+          style={{
+            background: "linear-gradient(180deg, rgba(20, 23, 28, 0.3) 0%, rgba(20, 23, 28, 0.95) 100%)"
+          }}
+        >
+          <img
+            src={CATEGORY_IMAGES.weights}
+            alt="Weights"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.35,
+              zIndex: 1
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span className="pill" style={{ borderColor: "#6ba4ff", color: "#6ba4ff", marginBottom: "4px" }}>
+              BARBELL & DUMBBELL
+            </span>
+            <br />
+            <b style={{ fontSize: "20px" }}>Weights</b>
+            <small>Compound strength · hypertrophy · iron</small>
+          </div>
+        </Link>
+
+        {/* 3. HIIT */}
+        <Link
+          href="/library?cat=hiit"
+          className="mtile cl"
+          style={{
+            background: "linear-gradient(180deg, rgba(20, 23, 28, 0.3) 0%, rgba(20, 23, 28, 0.95) 100%)"
+          }}
+        >
+          <img
+            src={CATEGORY_IMAGES.hiit}
+            alt="HIIT"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.35,
+              zIndex: 1
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span className="pill" style={{ borderColor: "#ff6b2c", color: "#ff6b2c", marginBottom: "4px" }}>
+              HIGH INTENSITY
+            </span>
+            <br />
+            <b style={{ fontSize: "20px" }}>HIIT</b>
+            <small>Tabata intervals · metabolic conditioning</small>
+          </div>
+        </Link>
+
+        {/* 4. Cardio */}
+        <Link
+          href="/library?cat=cardio"
+          className="mtile cl"
+          style={{
+            background: "linear-gradient(180deg, rgba(20, 23, 28, 0.3) 0%, rgba(20, 23, 28, 0.95) 100%)"
+          }}
+        >
+          <img
+            src={CATEGORY_IMAGES.cardio}
+            alt="Cardio"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.35,
+              zIndex: 1
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span className="pill" style={{ borderColor: "#3ed598", color: "#3ed598", marginBottom: "4px" }}>
+              ENDURANCE
+            </span>
+            <br />
+            <b style={{ fontSize: "20px" }}>Cardio</b>
+            <small>Sprints · jump rope · aerobic engine</small>
+          </div>
+        </Link>
+
+        {/* 5. Core */}
+        <Link
+          href="/library?cat=core"
+          className="mtile cl"
+          style={{
+            background: "linear-gradient(180deg, rgba(20, 23, 28, 0.3) 0%, rgba(20, 23, 28, 0.95) 100%)"
+          }}
+        >
+          <img
+            src={CATEGORY_IMAGES.core}
+            alt="Core"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.35,
+              zIndex: 1
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span className="pill" style={{ borderColor: "#ffd34d", color: "#ffd34d", marginBottom: "4px" }}>
+              MIDSECTION STEEL
+            </span>
+            <br />
+            <b style={{ fontSize: "20px" }}>Core</b>
+            <small>L-sits · hollow body · ab rollouts</small>
+          </div>
+        </Link>
+
+        {/* 6. Mobility */}
+        <Link
+          href="/library?cat=mobility"
+          className="mtile cl"
+          style={{
+            background: "linear-gradient(180deg, rgba(20, 23, 28, 0.3) 0%, rgba(20, 23, 28, 0.95) 100%)"
+          }}
+        >
+          <img
+            src={CATEGORY_IMAGES.mobility}
+            alt="Mobility"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.35,
+              zIndex: 1
+            }}
+          />
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <span className="pill" style={{ borderColor: "#9b7bff", color: "#9b7bff", marginBottom: "4px" }}>
+              JOINT HEALTH
+            </span>
+            <br />
+            <b style={{ fontSize: "20px" }}>Mobility</b>
+            <small>Wrist prep · shoulder dislocates · flow</small>
+          </div>
+        </Link>
+      </div>
+
+      <div className="sect">
+        <h2>Why Calisthenics First?</h2>
+      </div>
+      <div className="grid g3">
+        <div className="card">
+          <b style={{ fontSize: "16px", color: "var(--acc)" }}>📐 Relative Strength</b>
+          <p className="mut sm" style={{ marginTop: "6px" }}>
+            Being strong FOR your size beats machine numbers. Every kilo must earn its place.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="card">
+          <b style={{ fontSize: "16px", color: "var(--ok)" }}>🔋 Zero Excuses</b>
+          <p className="mut sm" style={{ marginTop: "6px" }}>
+            A bar and a floor is a full gym. Travel-proof, weatherproof, membership-optional.
+          </p>
         </div>
-      </main>
+        <div className="card">
+          <b style={{ fontSize: "16px", color: "var(--warn)" }}>🎯 Skills, Not Sets</b>
+          <p className="mut sm" style={{ marginTop: "6px" }}>
+            Muscle-ups and handstands turn training into mastery — motivation that never runs out.
+          </p>
+        </div>
+      </div>
+
+      {/* Routine Detail Modal */}
+      <WorkoutModal
+        workout={previewWorkout}
+        onClose={() => setPreviewWorkout(null)}
+      />
     </div>
   );
 }
