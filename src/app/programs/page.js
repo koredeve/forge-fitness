@@ -5,6 +5,7 @@ import { useFitness } from "@/context/FitnessContext";
 import { useAuth } from "@/context/AuthContext";
 import WorkoutModal from "@/components/WorkoutModal";
 import ProModal from "@/components/ProModal";
+import AuthModal from "@/components/AuthModal";
 
 const PROGRAM_BANNERS = {
   p1: "/banners/foundation.jpg",
@@ -12,25 +13,49 @@ const PROGRAM_BANNERS = {
   p3: "/banners/hybrid.jpg"
 };
 
-// Foundation 30 is Free, p2 & p3 require PRO
+// Foundation 30 is Free for signed-in users, p2 & p3 require PRO
 const FREE_PROGRAMS = ["p1"];
 
 export default function Programs() {
   const { startWorkout } = useFitness();
-  const { isPro } = useAuth();
+  const { user, isPro } = useAuth();
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [proModalOpen, setProModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [lockedProgramName, setLockedProgramName] = useState("");
 
   const handleProgramAction = (pId, pName, wId) => {
+    // 1. If not logged in -> prompt auth
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    // 2. If locked PRO program -> prompt PRO
     const isLocked = !isPro && !FREE_PROGRAMS.includes(pId);
     if (isLocked) {
       setLockedProgramName(pName);
       setProModalOpen(true);
       return;
     }
+
+    // 3. Open workout preview
     const w = WORKOUTS.find((item) => item.id === wId);
     setSelectedWorkout(w);
+  };
+
+  const handleDirectStart = (pId, pName, wId) => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    const isLocked = !isPro && !FREE_PROGRAMS.includes(pId);
+    if (isLocked) {
+      setLockedProgramName(pName);
+      setProModalOpen(true);
+      return;
+    }
+    startWorkout(wId);
   };
 
   return (
@@ -61,6 +86,33 @@ export default function Programs() {
           </button>
         )}
       </div>
+
+      {!user && (
+        <div
+          style={{
+            background: "rgba(255, 107, 44, 0.08)",
+            border: "1px solid rgba(255, 107, 44, 0.35)",
+            borderRadius: "14px",
+            padding: "14px 18px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+            marginBottom: "20px"
+          }}
+        >
+          <div>
+            <b style={{ color: "var(--acc)", fontSize: "14px" }}>🔐 Sign in to access workout programs</b>
+            <span className="mut sm" style={{ display: "block", fontSize: "12px", marginTop: "2px" }}>
+              Create a free account to unlock daily routine schedules, active timers, and automatic progress logging.
+            </span>
+          </div>
+          <button className="btn sm" onClick={() => setAuthModalOpen(true)}>
+            Sign In / Register →
+          </button>
+        </div>
+      )}
 
       <div className="grid g2">
         {PROGRAMS.map((p) => {
@@ -138,15 +190,10 @@ export default function Programs() {
                           style={{ marginTop: "8px", width: "100%", justifyContent: "center", padding: "5px" }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isLocked) {
-                              setLockedProgramName(p.n);
-                              setProModalOpen(true);
-                            } else {
-                              startWorkout(wId);
-                            }
+                            handleDirectStart(p.id, p.n, wId);
                           }}
                         >
-                          {isLocked ? "🔒 Unlock" : "Start →"}
+                          {!user ? "🔒 Sign In" : isLocked ? "🔒 Unlock" : "Start →"}
                         </button>
                       </div>
                     );
@@ -171,6 +218,12 @@ export default function Programs() {
         isOpen={proModalOpen}
         onClose={() => setProModalOpen(false)}
         featureName={lockedProgramName}
+      />
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        subtitle="Sign in or register to follow structured training roadmaps and track daily workouts."
       />
     </div>
   );
