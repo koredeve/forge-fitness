@@ -12,6 +12,10 @@ export default function Progress() {
   const [sessCat, setSessCat] = useState("calis");
   const [sessMin, setSessMin] = useState(30);
 
+  // Custom PR Modal state
+  const [activePRTest, setActivePRTest] = useState(null);
+  const [prScoreInput, setPrScoreInput] = useState("");
+
   const streak = getStreak();
   const totalMins = logs.reduce((a, s) => a + (s.min || 0), 0);
   const avgMins = logs.length ? Math.round(totalMins / logs.length) : 0;
@@ -41,18 +45,21 @@ export default function Progress() {
     setSessName("");
   };
 
-  const handlePromptPR = (testId, testName, unit) => {
-    const valStr = prompt(`Enter your ${testName} (${unit}):`);
-    const val = parseInt(valStr, 10);
+  const handleSavePR = (e) => {
+    e.preventDefault();
+    if (!activePRTest) return;
+    const val = parseInt(prScoreInput, 10);
     if (!val || val <= 0) return;
-    addPR(testId, val);
+    addPR(activePRTest.id, val);
+    setActivePRTest(null);
+    setPrScoreInput("");
   };
 
   return (
     <div className="vw active" id="v-progress">
       <h1 className="pg">Progress</h1>
       <p className="sub">
-        Numbers that keep you honest. {user ? "Backed up live to Firebase Firestore." : "Saved locally on this device."}
+        Numbers that keep you honest. {user ? "Synchronized live with Firebase Cloud Firestore." : "Saved locally on this device."}
       </p>
 
       <div className="stats">
@@ -111,7 +118,10 @@ export default function Progress() {
                 <b>{t.n}</b>
                 <button
                   className="btn gh sm"
-                  onClick={() => handlePromptPR(t.id, t.n, t.u)}
+                  onClick={() => {
+                    setActivePRTest(t);
+                    setPrScoreInput("");
+                  }}
                 >
                   + Log test
                 </button>
@@ -208,6 +218,55 @@ export default function Progress() {
           )}
         </div>
       </div>
+
+      {/* Custom Sleek PR Test Log Modal (NO Native Browser Prompt!) */}
+      {activePRTest && (
+        <div className="ov show" onClick={(e) => e.target === e.currentTarget && setActivePRTest(null)}>
+          <div className="sheet" style={{ maxWidth: "420px" }}>
+            <button className="xbtn" onClick={() => setActivePRTest(null)}>✕</button>
+            <span className="cali-acc">MAX REPS / HOLD TEST</span>
+            <h3 style={{ marginTop: "4px" }}>Log {activePRTest.n}</h3>
+            <p className="mut sm" style={{ marginBottom: "16px" }}>
+              Record your current maximum benchmark ({activePRTest.u}).
+            </p>
+
+            <form onSubmit={handleSavePR}>
+              <label className="mut sm" style={{ display: "block", marginBottom: "6px" }}>
+                Score ({activePRTest.u})
+              </label>
+              <input
+                type="number"
+                autoFocus
+                required
+                min="1"
+                placeholder={`e.g. 15`}
+                value={prScoreInput}
+                onChange={(e) => setPrScoreInput(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  background: "var(--p)",
+                  border: "1px solid var(--ln)",
+                  borderRadius: "10px",
+                  color: "#fff",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  outline: "none",
+                  marginBottom: "16px"
+                }}
+              />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <button type="button" className="btn gh" onClick={() => setActivePRTest(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn" style={{ justifyContent: "center" }}>
+                  Save PR 🎯
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

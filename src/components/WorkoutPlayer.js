@@ -3,32 +3,32 @@ import React, { useState, useEffect, useRef } from "react";
 import { useFitness } from "@/context/FitnessContext";
 import { EXDB } from "@/data/db";
 
-// Video and artwork mapping for all exercises
+// Image & video mapping for all exercises
 const EXERCISE_MEDIA = {
-  pushup: { video: "/videos/pushup.mp4", img: "/illustrations/pullup.jpg" },
-  diamond: { video: "/videos/pushup.mp4", img: "/illustrations/pullup.jpg" },
-  dip: { video: "/videos/dip.mp4", img: "/illustrations/pullup.jpg" },
-  pullup: { video: "/videos/pullup.mp4", img: "/illustrations/pullup.jpg" },
-  chinup: { video: "/videos/pullup.mp4", img: "/illustrations/pullup.jpg" },
-  negpull: { video: "/videos/pullup.mp4", img: "/illustrations/pullup.jpg" },
-  exppull: { video: "/videos/pullup.mp4", img: "/illustrations/pullup.jpg" },
-  scap: { video: "/videos/pullup.mp4", img: "/illustrations/pullup.jpg" },
-  muscleup: { video: "/videos/muscleup.mp4", img: "/illustrations/muscleup.jpg" },
-  hstand: { video: "/videos/hstand.mp4", img: "/illustrations/hstand.jpg" },
-  hspu: { video: "/videos/hstand.mp4", img: "/illustrations/hstand.jpg" },
-  pike: { video: "/videos/hstand.mp4", img: "/illustrations/hstand.jpg" },
-  planche: { video: "/videos/planche.mp4", img: "/illustrations/planche.jpg" },
-  frontlev: { video: "/videos/flev.mp4", img: "/illustrations/flev.jpg" },
-  flev: { video: "/videos/flev.mp4", img: "/illustrations/flev.jpg" },
-  lsit: { video: "/videos/lsit.mp4", img: "/illustrations/lsit.jpg" },
-  legraise: { video: "/videos/lsit.mp4", img: "/illustrations/lsit.jpg" },
-  hollow: { video: "/videos/lsit.mp4", img: "/illustrations/lsit.jpg" },
-  plank: { video: "/videos/pushup.mp4", img: "/illustrations/pullup.jpg" },
-  squat: { video: "/videos/squat.mp4", img: "/illustrations/pistol.jpg" },
-  squatbb: { video: "/videos/squat.mp4", img: "/illustrations/pistol.jpg" },
-  bulg: { video: "/videos/squat.mp4", img: "/illustrations/pistol.jpg" },
-  pistol: { video: "/videos/squat.mp4", img: "/illustrations/pistol.jpg" },
-  default: { video: "/videos/pushup.mp4", img: "/illustrations/pullup.jpg" }
+  pushup: { img: "/illustrations/pullup.jpg", video: "/videos/pushup.mp4" },
+  diamond: { img: "/illustrations/pullup.jpg", video: "/videos/pushup.mp4" },
+  dip: { img: "/illustrations/pullup.jpg", video: "/videos/dip.mp4" },
+  pullup: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
+  chinup: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
+  negpull: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
+  exppull: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
+  scap: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
+  muscleup: { img: "/illustrations/muscleup.jpg", video: "/videos/muscleup.mp4" },
+  hstand: { img: "/illustrations/hstand.jpg", video: "/videos/hstand.mp4" },
+  hspu: { img: "/illustrations/hstand.jpg", video: "/videos/hstand.mp4" },
+  pike: { img: "/illustrations/hstand.jpg", video: "/videos/hstand.mp4" },
+  planche: { img: "/illustrations/planche.jpg", video: "/videos/planche.mp4" },
+  frontlev: { img: "/illustrations/flev.jpg", video: "/videos/flev.mp4" },
+  flev: { img: "/illustrations/flev.jpg", video: "/videos/flev.mp4" },
+  lsit: { img: "/illustrations/lsit.jpg", video: "/videos/lsit.mp4" },
+  legraise: { img: "/illustrations/lsit.jpg", video: "/videos/lsit.mp4" },
+  hollow: { img: "/illustrations/lsit.jpg", video: "/videos/lsit.mp4" },
+  plank: { img: "/illustrations/pullup.jpg", video: "/videos/pushup.mp4" },
+  squat: { img: "/illustrations/pistol.jpg", video: "/videos/squat.mp4" },
+  squatbb: { img: "/illustrations/pistol.jpg", video: "/videos/squat.mp4" },
+  bulg: { img: "/illustrations/pistol.jpg", video: "/videos/squat.mp4" },
+  pistol: { img: "/illustrations/pistol.jpg", video: "/videos/squat.mp4" },
+  default: { img: "/illustrations/pullup.jpg", video: "/videos/pushup.mp4" }
 };
 
 export default function WorkoutPlayer() {
@@ -38,9 +38,9 @@ export default function WorkoutPlayer() {
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const [isDone, setIsDone] = useState(false);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const intervalRef = useRef(null);
-  const videoRef = useRef(null);
 
   // Build steps from active session workout
   const steps = React.useMemo(() => {
@@ -84,6 +84,7 @@ export default function WorkoutPlayer() {
       setStepIdx(0);
       setIsDone(false);
       setIsRunning(true);
+      setShowQuitConfirm(false);
       setStartTime(Date.now());
       if (steps[0]) setTimer(steps[0].t || 0);
     }
@@ -92,14 +93,6 @@ export default function WorkoutPlayer() {
   const currentStep = steps[stepIdx];
   const activeExId = currentStep?.exId || "pushup";
   const media = EXERCISE_MEDIA[activeExId] || EXERCISE_MEDIA.default;
-
-  // Auto-reload video on step change
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.load();
-      videoRef.current.play().catch(() => {});
-    }
-  }, [activeExId, stepIdx]);
 
   const advanceStep = () => {
     const nextIdx = stepIdx + 1;
@@ -133,7 +126,7 @@ export default function WorkoutPlayer() {
   };
 
   useEffect(() => {
-    if (!activeSession || !isRunning || isDone) {
+    if (!activeSession || !isRunning || isDone || showQuitConfirm) {
       clearInterval(intervalRef.current);
       return;
     }
@@ -153,7 +146,7 @@ export default function WorkoutPlayer() {
     }, 1000);
 
     return () => clearInterval(intervalRef.current);
-  }, [activeSession, isRunning, stepIdx, isDone]);
+  }, [activeSession, isRunning, stepIdx, isDone, showQuitConfirm]);
 
   if (!activeSession) return null;
 
@@ -174,20 +167,13 @@ export default function WorkoutPlayer() {
           <button className="btn gh sm" onClick={advanceStep}>
             ⏭ Skip
           </button>
-          <button
-            className="btn gh sm"
-            onClick={() => {
-              if (confirm("Quit guided session? Progress will not be saved.")) {
-                setActiveSession(null);
-              }
-            }}
-          >
+          <button className="btn gh sm" onClick={() => setShowQuitConfirm(true)}>
             ✕
           </button>
         </div>
       </div>
 
-      {/* Main Interactive Workout Arena with Real Video Reference */}
+      {/* Main Interactive Workout Arena with Real Artwork & Media Reference */}
       <div
         className="sbd"
         style={{
@@ -201,65 +187,77 @@ export default function WorkoutPlayer() {
           padding: "16px 20px"
         }}
       >
-        {/* Left Column: Real HD Video / Visual Reference Card */}
+        {/* Left Column: High-Res Artwork & Visual Reference Card */}
         <div
           style={{
             position: "relative",
             width: "100%",
-            height: "300px",
+            height: "320px",
             background: "#000",
-            borderRadius: "18px",
+            borderRadius: "20px",
             overflow: "hidden",
             border: "2px solid var(--ln)",
-            boxShadow: "0 12px 36px rgba(0, 0, 0, 0.6)"
+            boxShadow: "0 14px 40px rgba(0, 0, 0, 0.7)"
           }}
         >
-          <video
-            ref={videoRef}
-            src={media.video}
-            loop
-            muted
-            autoPlay
-            playsInline
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          <img
+            src={media.img}
+            alt={currentStep?.x}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              filter: "contrast(115%) brightness(95%)"
+            }}
           />
 
-          {/* Overlay Status Badge */}
+          {/* Dark gradient overlay */}
           <div
             style={{
               position: "absolute",
-              top: "12px",
-              left: "12px",
-              background: "rgba(11, 13, 16, 0.85)",
-              backdropFilter: "blur(6px)",
-              padding: "4px 10px",
+              inset: 0,
+              background: "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.85) 100%)"
+            }}
+          />
+
+          {/* Status Badge */}
+          <div
+            style={{
+              position: "absolute",
+              top: "14px",
+              left: "14px",
+              background: "rgba(11, 13, 16, 0.9)",
+              backdropFilter: "blur(8px)",
+              padding: "5px 12px",
               borderRadius: "8px",
               fontSize: "11px",
               color: currentStep?.p === "WORK" ? "var(--acc)" : "var(--ok)",
-              fontWeight: "700",
-              border: "1px solid var(--ln)"
+              fontWeight: "800",
+              border: "1px solid var(--ln)",
+              letterSpacing: "0.08em"
             }}
           >
-            {currentStep?.p === "WORK" ? "⚡ ACTIVE FORM GUIDE" : "👀 UPCOMING MOVEMENT"}
+            {currentStep?.p === "WORK" ? "⚡ ACTIVE EXERCISE" : "👀 NEXT MOVEMENT"}
           </div>
 
           <div
             style={{
               position: "absolute",
-              bottom: "12px",
-              left: "12px",
-              right: "12px",
-              background: "rgba(11, 13, 16, 0.88)",
-              backdropFilter: "blur(6px)",
-              padding: "8px 12px",
-              borderRadius: "10px",
-              fontSize: "12px",
+              bottom: "14px",
+              left: "14px",
+              right: "14px",
+              background: "rgba(11, 13, 16, 0.92)",
+              backdropFilter: "blur(8px)",
+              padding: "10px 14px",
+              borderRadius: "12px",
+              fontSize: "13px",
               border: "1px solid var(--ln)"
             }}
           >
-            <b style={{ color: "#fff", display: "block" }}>{currentStep?.x}</b>
-            <span className="mut sm" style={{ fontSize: "11px" }}>
-              {currentStep?.set ? `Set ${currentStep.set} of ${currentStep.sets}` : "Recovery interval"}
+            <b style={{ color: "#fff", display: "block", fontSize: "16px" }}>{currentStep?.x}</b>
+            <span className="mut sm" style={{ fontSize: "12px" }}>
+              {currentStep?.set ? `Set ${currentStep.set} of ${currentStep.sets}` : "Active rest phase"}
             </span>
           </div>
         </div>
@@ -298,9 +296,9 @@ export default function WorkoutPlayer() {
 
               {/* Form Cues Ticker */}
               {currentStep?.cues && (
-                <div style={{ display: "flex", gap: "6px", marginTop: "12px", flexWrap: "wrap", justifyContent: "center" }}>
+                <div style={{ display: "flex", gap: "6px", marginTop: "14px", flexWrap: "wrap", justifyContent: "center" }}>
                   {currentStep.cues.slice(0, 2).map((c, i) => (
-                    <span key={i} className="pill" style={{ borderColor: "var(--acc)", color: "var(--tx)", fontSize: "11px" }}>
+                    <span key={i} className="pill" style={{ borderColor: "var(--acc)", color: "var(--tx)", fontSize: "11.5px" }}>
                       ✔ {c}
                     </span>
                   ))}
@@ -309,7 +307,7 @@ export default function WorkoutPlayer() {
 
               {/* Complete Set Button for Rep-based sets */}
               {manual && (
-                <div style={{ marginTop: "16px" }}>
+                <div style={{ marginTop: "18px" }}>
                   <button
                     className="btn"
                     style={{ padding: "14px 28px", fontSize: "15px", boxShadow: "0 6px 20px rgba(255, 107, 44, 0.4)" }}
@@ -340,6 +338,33 @@ export default function WorkoutPlayer() {
           );
         })}
       </div>
+
+      {/* Custom Sleek In-App Quit Dialog (NO Native Browser Alerts!) */}
+      {showQuitConfirm && (
+        <div className="ov show" style={{ zIndex: 300 }} onClick={(e) => e.target === e.currentTarget && setShowQuitConfirm(false)}>
+          <div className="sheet" style={{ maxWidth: "400px", textAlign: "center" }}>
+            <h3 style={{ fontSize: "20px" }}>End Guided Session?</h3>
+            <p className="mut sm" style={{ margin: "8px 0 20px" }}>
+              Are you sure you want to quit? Unfinished workout progress will not be logged.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <button className="btn gh" onClick={() => setShowQuitConfirm(false)}>
+                Continue Training
+              </button>
+              <button
+                className="btn"
+                style={{ background: "#ff4d4d" }}
+                onClick={() => {
+                  setShowQuitConfirm(false);
+                  setActiveSession(null);
+                }}
+              >
+                Quit Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

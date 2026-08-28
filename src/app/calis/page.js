@@ -2,18 +2,26 @@
 import React, { useState } from "react";
 import { SKILLS, WORKOUTS, EXDB } from "@/data/db";
 import { useFitness } from "@/context/FitnessContext";
+import { useAuth } from "@/context/AuthContext";
 import SkillTreeVisual from "@/components/SkillTreeVisual";
 import WorkoutModal from "@/components/WorkoutModal";
 import ExerciseModal from "@/components/ExerciseModal";
+import ProModal from "@/components/ProModal";
+
+// Free tier access list (Pull-Up & Dip up to Lv2)
+const FREE_SKILLS = ["pullup", "dip"];
 
 export default function Calis() {
   const { skills, toggleSkill, getSkillsPct, startWorkout } = useFitness();
+  const { isPro } = useAuth();
+
   const [openSkills, setOpenSkills] = useState({
-    pullup: true,
-    muscleup: true
+    pullup: true
   });
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [selectedEx, setSelectedEx] = useState(null);
+  const [proModalOpen, setProModalOpen] = useState(false);
+  const [lockedFeatureName, setLockedFeatureName] = useState("");
 
   const toggleOpen = (id) => {
     setOpenSkills((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -21,9 +29,7 @@ export default function Calis() {
 
   const masteryPct = getSkillsPct();
 
-  // Find exercise for preview
   const openFormPreview = (levelTitle, skillId) => {
-    // Match against EXDB
     const match = EXDB.find(
       (e) =>
         e.id === skillId ||
@@ -33,14 +39,46 @@ export default function Calis() {
     setSelectedEx(match);
   };
 
+  const handleLevelClick = (skillId, levelIdx, skillName) => {
+    const isLevelLocked = !isPro && (!FREE_SKILLS.includes(skillId) || levelIdx >= 2);
+    if (isLevelLocked) {
+      setLockedFeatureName(`${skillName} (Level ${levelIdx + 1})`);
+      setProModalOpen(true);
+      return;
+    }
+    toggleSkill(skillId, levelIdx);
+  };
+
   return (
     <div className="vw active" id="v-calis">
-      <h1 className="pg">
-        Calisthenics <em>Hub</em>
-      </h1>
-      <p className="sub">
-        Your body is the barbell. Climb these ladders — check off levels as you earn them. Skill work first while fresh, strength after.
-      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+        <div>
+          <h1 className="pg">
+            Calisthenics <em>Hub</em>
+          </h1>
+          <p className="sub">
+            Your body is the barbell. Master bodyweight physics, climb the skill trees, and unlock elite relative strength.
+          </p>
+        </div>
+
+        {!isPro && (
+          <button
+            className="btn"
+            style={{
+              background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
+              boxShadow: "0 6px 20px rgba(255, 107, 44, 0.35)",
+              padding: "10px 18px",
+              fontSize: "13px"
+            }}
+            onClick={() => {
+              setLockedFeatureName("All Calisthenics Master Trees");
+              setProModalOpen(true);
+            }}
+          >
+            👑 Unlock All Skills with PRO
+          </button>
+        )}
+      </div>
 
       <div className="stats">
         <div className="stat">
@@ -60,13 +98,17 @@ export default function Calis() {
           const doneCount = s.lv.filter((_, i) => userLevels[i]).length;
           const pct = Math.round((doneCount / s.lv.length) * 100);
           const isOpen = !!openSkills[s.id];
+          const isSkillLocked = !isPro && !FREE_SKILLS.includes(s.id);
 
           return (
             <div
               key={s.id}
               className={`card skill ${isOpen ? "open" : ""}`}
               id={`sk-${s.id}`}
-              style={{ transition: "0.2s border-color" }}
+              style={{
+                borderColor: isSkillLocked ? "var(--ln)" : undefined,
+                background: isSkillLocked ? "rgba(18, 22, 27, 0.6)" : "var(--p)"
+              }}
             >
               <div
                 style={{
@@ -81,10 +123,15 @@ export default function Calis() {
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <SkillTreeVisual skillId={s.id} />
                   <div>
-                    <h4 style={{ margin: 0, fontSize: "16px" }}>
+                    <h4 style={{ margin: 0, fontSize: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
                       <span>
                         {s.icon} {s.n}
                       </span>
+                      {isSkillLocked && (
+                        <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", padding: "2px 6px", fontSize: "9px" }}>
+                          🔒 PRO
+                        </span>
+                      )}
                     </h4>
                     <span className="mut sm" style={{ fontSize: "12px" }}>
                       {doneCount} of {s.lv.length} levels unlocked
@@ -101,43 +148,57 @@ export default function Calis() {
               </div>
 
               <div className="lvls" style={{ display: isOpen ? "block" : "none", marginTop: "14px" }}>
-                {s.lv.map((l, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "8px 0",
-                      borderBottom: "1px dashed var(--ln)"
-                    }}
-                  >
-                    <label style={{ display: "flex", gap: "10px", alignItems: "center", cursor: "pointer", flex: 1 }}>
-                      <input
-                        type="checkbox"
-                        checked={!!userLevels[i]}
-                        onChange={() => toggleSkill(s.id, i)}
-                      />
-                      <span>
-                        <b style={{ color: userLevels[i] ? "var(--ok)" : "var(--tx)" }}>
-                          Lv{i + 1} · {l[0]}
-                        </b>
-                        <span className="crit" style={{ display: "block" }}>{l[1]}</span>
-                      </span>
-                    </label>
-
-                    <button
-                      className="btn gh sm"
-                      style={{ padding: "4px 8px", fontSize: "11px", whiteSpace: "nowrap" }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openFormPreview(l[0], s.id);
+                {s.lv.map((l, i) => {
+                  const isLockedLevel = !isPro && (!FREE_SKILLS.includes(s.id) || i >= 2);
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 0",
+                        borderBottom: "1px dashed var(--ln)",
+                        opacity: isLockedLevel ? 0.75 : 1
                       }}
                     >
-                      Motion Guide 🎬
-                    </button>
-                  </div>
-                ))}
+                      <label
+                        style={{ display: "flex", gap: "10px", alignItems: "center", cursor: "pointer", flex: 1 }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleLevelClick(s.id, i, s.n);
+                        }}
+                      >
+                        {isLockedLevel ? (
+                          <span style={{ fontSize: "14px", color: "var(--acc)" }}>🔒</span>
+                        ) : (
+                          <input
+                            type="checkbox"
+                            checked={!!userLevels[i]}
+                            onChange={() => {}}
+                          />
+                        )}
+                        <span>
+                          <b style={{ color: userLevels[i] ? "var(--ok)" : isLockedLevel ? "var(--mut)" : "var(--tx)" }}>
+                            Lv{i + 1} · {l[0]} {isLockedLevel && <span style={{ fontSize: "10px", color: "var(--acc)" }}>(PRO)</span>}
+                          </b>
+                          <span className="crit" style={{ display: "block" }}>{l[1]}</span>
+                        </span>
+                      </label>
+
+                      <button
+                        className="btn gh sm"
+                        style={{ padding: "4px 8px", fontSize: "11px", whiteSpace: "nowrap" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openFormPreview(l[0], s.id);
+                        }}
+                      >
+                        Motion Guide 🎬
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -185,30 +246,6 @@ export default function Calis() {
         ))}
       </div>
 
-      <div className="sect">
-        <h2>The Laws of Progress</h2>
-      </div>
-      <div className="grid g3">
-        <div className="card">
-          <b>1 · Full Range or Fake Range</b>
-          <p className="mut sm" style={{ marginTop: "6px" }}>
-            A deep controlled rep beats three ego bounces.
-          </p>
-        </div>
-        <div className="card">
-          <b>2 · Grease the Groove</b>
-          <p className="mut sm" style={{ marginTop: "6px" }}>
-            Frequent submaximal sets (50–60% max) through the day build skills freakishly fast.
-          </p>
-        </div>
-        <div className="card">
-          <b>3 · Earn Every Progression</b>
-          <p className="mut sm" style={{ marginTop: "6px" }}>
-            Master each variation before jumping up. Injury is the ultimate time thief.
-          </p>
-        </div>
-      </div>
-
       {/* Routine Detail Modal */}
       <WorkoutModal
         workout={selectedWorkout}
@@ -220,6 +257,13 @@ export default function Calis() {
         exercise={selectedEx}
         onClose={() => setSelectedEx(null)}
         onSelectExercise={(ex) => setSelectedEx(ex)}
+      />
+
+      {/* PRO Paywall Modal */}
+      <ProModal
+        isOpen={proModalOpen}
+        onClose={() => setProModalOpen(false)}
+        featureName={lockedFeatureName}
       />
     </div>
   );

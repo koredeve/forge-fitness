@@ -2,7 +2,9 @@
 import React, { useState } from "react";
 import { PROGRAMS, WORKOUTS, CATS } from "@/data/db";
 import { useFitness } from "@/context/FitnessContext";
+import { useAuth } from "@/context/AuthContext";
 import WorkoutModal from "@/components/WorkoutModal";
+import ProModal from "@/components/ProModal";
 
 const PROGRAM_BANNERS = {
   p1: "/banners/foundation.jpg",
@@ -10,20 +12,61 @@ const PROGRAM_BANNERS = {
   p3: "/banners/hybrid.jpg"
 };
 
+// Foundation 30 is Free, p2 & p3 require PRO
+const FREE_PROGRAMS = ["p1"];
+
 export default function Programs() {
   const { startWorkout } = useFitness();
+  const { isPro } = useAuth();
   const [selectedWorkout, setSelectedWorkout] = useState(null);
+  const [proModalOpen, setProModalOpen] = useState(false);
+  const [lockedProgramName, setLockedProgramName] = useState("");
+
+  const handleProgramAction = (pId, pName, wId) => {
+    const isLocked = !isPro && !FREE_PROGRAMS.includes(pId);
+    if (isLocked) {
+      setLockedProgramName(pName);
+      setProModalOpen(true);
+      return;
+    }
+    const w = WORKOUTS.find((item) => item.id === wId);
+    setSelectedWorkout(w);
+  };
 
   return (
     <div className="vw active" id="v-programs">
-      <h1 className="pg">Programs</h1>
-      <p className="sub">
-        Pick a plan, follow the week grid, start each day with one tap. Progressive overload is the only magic.
-      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+        <div>
+          <h1 className="pg">Programs</h1>
+          <p className="sub">
+            Pick a structured training roadmap, follow the week grid, and start each day with one tap.
+          </p>
+        </div>
+
+        {!isPro && (
+          <button
+            className="btn"
+            style={{
+              background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
+              boxShadow: "0 6px 20px rgba(255, 107, 44, 0.35)",
+              padding: "10px 18px",
+              fontSize: "13px"
+            }}
+            onClick={() => {
+              setLockedProgramName("All Advanced Workout Programs");
+              setProModalOpen(true);
+            }}
+          >
+            👑 Unlock All Programs with PRO
+          </button>
+        )}
+      </div>
 
       <div className="grid g2">
         {PROGRAMS.map((p) => {
           const bannerImg = PROGRAM_BANNERS[p.id] || "/banners/foundation.jpg";
+          const isLocked = !isPro && !FREE_PROGRAMS.includes(p.id);
+
           return (
             <div key={p.id} className="card" style={{ padding: 0, overflow: "hidden" }}>
               {/* Program Cinematic Banner */}
@@ -35,7 +78,7 @@ export default function Programs() {
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    opacity: 0.55,
+                    opacity: isLocked ? 0.4 : 0.65,
                     filter: "contrast(115%)"
                   }}
                 />
@@ -60,7 +103,9 @@ export default function Programs() {
                           {CATS[p.cat]?.n}
                         </span>
                       )}
-                      <b style={{ display: "block", fontSize: "20px", marginTop: "2px" }}>{p.n}</b>
+                      <b style={{ display: "block", fontSize: "20px", marginTop: "2px" }}>
+                        {p.n} {isLocked && <span style={{ fontSize: "12px", color: "var(--acc)" }}>🔒 (PRO)</span>}
+                      </b>
                     </div>
                     <span className={`pill lv${p.lv}`}>{"●".repeat(p.lv)} L{p.lv}</span>
                   </div>
@@ -84,7 +129,7 @@ export default function Programs() {
                         key={idx}
                         className="card cl"
                         style={{ padding: "10px" }}
-                        onClick={() => setSelectedWorkout(w)}
+                        onClick={() => handleProgramAction(p.id, p.n, wId)}
                       >
                         <b className="sm">{d}</b>
                         <div className="sm" style={{ fontWeight: "600", fontSize: "12px", marginTop: "2px" }}>{w?.n}</div>
@@ -93,10 +138,15 @@ export default function Programs() {
                           style={{ marginTop: "8px", width: "100%", justifyContent: "center", padding: "5px" }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            startWorkout(wId);
+                            if (isLocked) {
+                              setLockedProgramName(p.n);
+                              setProModalOpen(true);
+                            } else {
+                              startWorkout(wId);
+                            }
                           }}
                         >
-                          Start →
+                          {isLocked ? "🔒 Unlock" : "Start →"}
                         </button>
                       </div>
                     );
@@ -115,6 +165,12 @@ export default function Programs() {
       <WorkoutModal
         workout={selectedWorkout}
         onClose={() => setSelectedWorkout(null)}
+      />
+
+      <ProModal
+        isOpen={proModalOpen}
+        onClose={() => setProModalOpen(false)}
+        featureName={lockedProgramName}
       />
     </div>
   );
