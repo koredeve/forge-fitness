@@ -260,6 +260,46 @@ export default function Home() {
         ))}
       </div>
 
+      {/* 10-Year-Old Simple: 3-Step Walkthrough */}
+      <div className="sect" style={{ marginTop: "36px" }}>
+        <h2>How FORGE Works</h2>
+        <span className="mut">Simple as 1, 2, 3</span>
+      </div>
+      <div className="grid g3">
+        <div className="card" style={{ borderLeft: "4px solid var(--acc)", padding: "20px" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>🤸</div>
+          <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "10px", marginBottom: "6px" }}>
+            STEP 1
+          </span>
+          <b style={{ display: "block", fontSize: "17px", marginTop: "4px" }}>Pick a Skill or Plan</b>
+          <p className="mut sm" style={{ marginTop: "6px" }}>
+            Choose any calisthenics skill tree (Pull-Up, Handstand, Planche) or start a guided routine.
+          </p>
+        </div>
+
+        <div className="card" style={{ borderLeft: "4px solid var(--ok)", padding: "20px" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>🎙️</div>
+          <span className="pill" style={{ borderColor: "var(--ok)", color: "var(--ok)", fontSize: "10px", marginBottom: "6px" }}>
+            STEP 2
+          </span>
+          <b style={{ display: "block", fontSize: "17px", marginTop: "4px" }}>Follow the Live Coach</b>
+          <p className="mut sm" style={{ marginTop: "6px" }}>
+            The app speaks audio cues, counts your 3-2-1 countdowns, and tells you exactly how many reps to perform.
+          </p>
+        </div>
+
+        <div className="card" style={{ borderLeft: "4px solid var(--warn)", padding: "20px" }}>
+          <div style={{ fontSize: "32px", marginBottom: "8px" }}>🏆</div>
+          <span className="pill" style={{ borderColor: "var(--warn)", color: "var(--warn)", fontSize: "10px", marginBottom: "6px" }}>
+            STEP 3
+          </span>
+          <b style={{ display: "block", fontSize: "17px", marginTop: "4px" }}>Earn XP & Level Up</b>
+          <p className="mut sm" style={{ marginTop: "6px" }}>
+            Check off completed levels, earn athlete XP, and build unbroken daily training streaks!
+          </p>
+        </div>
+      </div>
+
       <div className="sect">
         <h2>Why Calisthenics First?</h2>
       </div>
