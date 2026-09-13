@@ -40,7 +40,6 @@ export default function WorkoutPlayer() {
   const [isDone, setIsDone] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [repsDone, setRepsDone] = useState(0);
   const [viewMode, setViewMode] = useState("video"); // 'video' | 'artwork'
   const [earnedXp, setEarnedXp] = useState(0);
   const [showXpBadge, setShowXpBadge] = useState(false);
@@ -118,7 +117,6 @@ export default function WorkoutPlayer() {
       setIsDone(false);
       setIsRunning(true);
       setShowQuitConfirm(false);
-      setRepsDone(0);
       setEarnedXp(0);
       setStartTime(Date.now());
       if (steps[0]) {
@@ -140,7 +138,6 @@ export default function WorkoutPlayer() {
 
   const advanceStep = () => {
     const nextIdx = stepIdx + 1;
-    setRepsDone(0);
 
     if (currentStep?.p === "WORK") {
       triggerXpAnimation();
@@ -156,7 +153,7 @@ export default function WorkoutPlayer() {
       if (st.p === "WORK") {
         playBeep(880, 0.25);
         if (st.rep) {
-          speakVoice(`Set ${st.set}. Do ${st.rep} reps of ${st.x}. Follow the video on screen, and tap each rep as you go.`);
+          speakVoice(`Set ${st.set}. Do ${st.rep} reps of ${st.x}. Tap the green button when finished.`);
         } else {
           speakVoice(`Set ${st.set}. Hold ${st.x} for ${st.t} seconds.`);
         }
@@ -164,18 +161,6 @@ export default function WorkoutPlayer() {
         playBeep(520, 0.25);
         speakVoice(`Set complete! Take a rest for ${st.t} seconds.`);
       }
-    }
-  };
-
-  const handleCountRep = () => {
-    const target = currentStep?.rep || 10;
-    const nextVal = repsDone + 1;
-    setRepsDone(nextVal);
-    playBeep(880, 0.08);
-
-    if (nextVal >= target) {
-      speakVoice(`Great job! All ${target} reps completed.`);
-      advanceStep();
     }
   };
 
@@ -433,7 +418,7 @@ export default function WorkoutPlayer() {
           </div>
         </div>
 
-        {/* Right: Step-by-Step Instructions & Interactive Counter */}
+        {/* Right: Step-by-Step Instructions & Clean Action */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
           {isDone ? (
             <div style={{ textAlign: "center", padding: "20px" }}>
@@ -481,149 +466,85 @@ export default function WorkoutPlayer() {
               </button>
             </div>
           ) : isWork ? (
-            /* Active Workout HUD: 100% Clear & Step-By-Step */
+            /* Active Workout HUD: Clean, Clear & Frictionless */
             <div
               style={{
                 width: "100%",
                 background: "linear-gradient(180deg, #1d1612 0%, #12161b 100%)",
                 border: "2px solid var(--acc)",
                 borderRadius: "20px",
-                padding: "22px",
+                padding: "26px 22px",
                 textAlign: "center",
                 boxShadow: "0 14px 44px rgba(255, 107, 44, 0.25)"
               }}
             >
-              {/* Step 1-2-3 Guide Banner */}
-              <div
-                style={{
-                  background: "rgba(255, 107, 44, 0.12)",
-                  border: "1px solid var(--acc)",
-                  borderRadius: "10px",
-                  padding: "8px 12px",
-                  fontSize: "12px",
-                  color: "#ffb38a",
-                  marginBottom: "12px",
-                  fontWeight: "600"
-                }}
-              >
-                📌 <b>WHAT TO DO:</b> Watch the video demo on the left & do <b>{currentStep?.rep || 15} reps</b>. Tap below as you count!
-              </div>
-
               {/* Huge Action Title */}
-              <div style={{ margin: "4px 0 10px" }}>
+              <div style={{ margin: "4px 0 14px" }}>
                 {isManualRep ? (
                   <>
-                    <h2 style={{ fontSize: "clamp(26px, 5vw, 36px)", fontWeight: "900", color: "#fff", margin: 0 }}>
+                    <h2 style={{ fontSize: "clamp(30px, 6vw, 44px)", fontWeight: "900", color: "#fff", margin: 0 }}>
                       DO {targetReps} REPS NOW
                     </h2>
-                    <span className="mut sm" style={{ fontSize: "12.5px" }}>
-                      Set {currentStep?.set} of {currentStep?.sets} · Follow strict form
+                    <span className="mut sm" style={{ fontSize: "13px", display: "block", marginTop: "4px" }}>
+                      Set {currentStep?.set} of {currentStep?.sets} · Follow the video demo on the left
                     </span>
                   </>
                 ) : (
                   <>
-                    <h2 style={{ fontSize: "clamp(26px, 5vw, 36px)", fontWeight: "900", color: "#fff", margin: 0 }}>
+                    <h2 style={{ fontSize: "clamp(28px, 6vw, 38px)", fontWeight: "900", color: "#fff", margin: 0 }}>
                       HOLD POSITION
                     </h2>
-                    <div className="clk" style={{ color: "var(--acc)", fontSize: "60px", margin: "2px 0" }}>
+                    <div className="clk" style={{ color: "var(--acc)", fontSize: "64px", margin: "2px 0" }}>
                       {timer}s
                     </div>
                   </>
                 )}
               </div>
 
-              {/* Interactive Rep Counter Stepper */}
-              {isManualRep && (
-                <div
-                  style={{
-                    background: "rgba(11, 13, 16, 0.9)",
-                    border: "1px solid var(--ln)",
-                    borderRadius: "14px",
-                    padding: "14px",
-                    margin: "12px 0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "10px"
-                  }}
-                >
-                  <button
-                    className="btn gh"
-                    style={{ padding: "8px 16px", fontSize: "18px", fontWeight: "900" }}
-                    onClick={() => setRepsDone(Math.max(0, repsDone - 1))}
-                    title="Decrease Rep"
-                  >
-                    −
-                  </button>
-
-                  <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "32px", fontWeight: "900", color: repsDone >= targetReps ? "var(--ok)" : "var(--acc)" }}>
-                      {repsDone} <span style={{ fontSize: "18px", color: "var(--mut)" }}>/ {targetReps}</span>
-                    </div>
-                    <span className="mut sm" style={{ fontSize: "11px" }}>
-                      {repsDone === 0 ? "Tap '+' after each rep you do!" : repsDone >= targetReps ? "Target hit!" : `${targetReps - repsDone} reps to go`}
-                    </span>
-                  </div>
-
-                  <button
-                    className="btn"
-                    style={{ padding: "8px 20px", fontSize: "18px", fontWeight: "900" }}
-                    onClick={handleCountRep}
-                    title="Count 1 Rep"
-                  >
-                    + Tap Rep
-                  </button>
-                </div>
-              )}
-
               {/* 3 Form Cues */}
               <div
                 style={{
                   textAlign: "left",
-                  background: "rgba(11, 13, 16, 0.75)",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  margin: "8px 0 14px",
+                  background: "rgba(11, 13, 16, 0.85)",
+                  padding: "14px 18px",
+                  borderRadius: "12px",
+                  margin: "12px 0 20px",
                   border: "1px solid var(--ln)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "4px"
+                  gap: "6px"
                 }}
               >
-                {currentStep?.cues?.slice(0, 2).map((cue, idx) => (
-                  <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", fontSize: "12px" }}>
+                {currentStep?.cues?.slice(0, 3).map((cue, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", fontSize: "13px" }}>
                     <span style={{ color: "var(--ok)", fontWeight: "bold" }}>✔</span>
                     <span style={{ color: "var(--tx)" }}>{cue}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Big Action Button */}
+              {/* Single Big Green Finish Button */}
               {isManualRep ? (
                 <button
                   className="btn"
                   style={{
                     width: "100%",
                     justifyContent: "center",
-                    padding: "15px 20px",
-                    fontSize: "15.5px",
+                    padding: "18px 24px",
+                    fontSize: "17px",
                     fontWeight: "900",
-                    background: repsDone >= targetReps
-                      ? "linear-gradient(135deg, #3ed598 0%, #20b275 100%)"
-                      : "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
-                    color: repsDone >= targetReps ? "#0b0d10" : "#fff",
-                    boxShadow: "0 8px 28px rgba(255, 107, 44, 0.4)"
+                    background: "linear-gradient(135deg, #3ed598 0%, #20b275 100%)",
+                    color: "#0b0d10",
+                    boxShadow: "0 8px 28px rgba(62, 213, 152, 0.45)"
                   }}
                   onClick={advanceStep}
                 >
-                  {repsDone >= targetReps
-                    ? `✅ TARGET MET! LOG SET & REST →`
-                    : `✅ I FINISHED ALL ${targetReps} REPS → REST`}
+                  ✅ I FINISHED MY {targetReps} REPS → START REST
                 </button>
               ) : (
                 <button
                   className="btn gh"
-                  style={{ width: "100%", justifyContent: "center", padding: "12px" }}
+                  style={{ width: "100%", justifyContent: "center", padding: "14px" }}
                   onClick={advanceStep}
                 >
                   ⏭ Finish Hold Early & Rest
