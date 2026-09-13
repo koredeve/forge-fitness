@@ -88,7 +88,7 @@ export default function Calis() {
 
         <div className="sect">
           <h2>Visual Skill Trees</h2>
-          <span className="mut">7 mastery progressions</span>
+          <span className="mut">{SKILLS.length} mastery progressions</span>
         </div>
 
         <div className="grid g2" id="skGrid">
