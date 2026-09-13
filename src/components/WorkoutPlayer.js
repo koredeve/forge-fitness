@@ -26,7 +26,7 @@ const EXERCISE_MEDIA = {
   rollout: { img: "/illustrations/lsit.jpg", video: "/videos/rollout.mp4" },
   hollow: { img: "/illustrations/lsit.jpg", video: "/videos/hollow.mp4" },
   plank: { img: "/illustrations/pullup.jpg", video: "/videos/plank.mp4" },
-  sidep: { img: "/illustrations/pullup.jpg", video: "/videos/sidep.mp4" },
+  sidep: { img: "/illustrations/pullup.jpg", video: "/videos/plank.mp4" },
   squat: { img: "/illustrations/pistol.jpg", video: "/videos/squat.mp4" },
   squatbb: { img: "/illustrations/pistol.jpg", video: "/videos/squat.mp4" },
   bulg: { img: "/illustrations/pistol.jpg", video: "/videos/bulg.mp4" },
