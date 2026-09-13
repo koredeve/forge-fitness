@@ -3,11 +3,13 @@ import React from "react";
 
 const TOON_MAP = {
   pullup: "/illustrations/pullup.jpg",
+  dip: "/illustrations/pullup.jpg",
   muscleup: "/illustrations/muscleup.jpg",
   planche: "/illustrations/planche.jpg",
   hstand: "/illustrations/hstand.jpg",
   flev: "/illustrations/flev.jpg",
   pistol: "/illustrations/pistol.jpg",
+  nordic: "/illustrations/pistol.jpg",
   lsit: "/illustrations/lsit.jpg"
 };
 

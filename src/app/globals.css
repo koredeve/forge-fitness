@@ -715,8 +715,8 @@ ul.rl li {
 }
 .chipsrow {
   max-width: 560px;
-  margin: 0 auto;
-  padding: 8px 14px 20px;
+  margin: 0 auto 20px;
+  padding: 8px 14px calc(24px + env(safe-area-inset-bottom, 20px));
   display: flex;
   flex-wrap: wrap;
   gap: 5px;

@@ -144,7 +144,10 @@ export default function Programs() {
                           key={idx}
                           className="card cl"
                           style={{ padding: "10px" }}
-                          onClick={() => handleProgramAction(p.id, p.n, wId)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleProgramAction(p.id, p.n, wId);
+                          }}
                         >
                           <b className="sm">{d}</b>
                           <div className="sm" style={{ fontWeight: "600", fontSize: "12px", marginTop: "2px" }}>{w?.n}</div>

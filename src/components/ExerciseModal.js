@@ -27,14 +27,29 @@ export default function ExerciseModal({ exercise, onClose, onSelectExercise }) {
     }
   }, [exercise?.id]);
 
+  const openTimeRef = React.useRef(0);
+
+  React.useEffect(() => {
+    if (exercise) {
+      openTimeRef.current = Date.now();
+    }
+  }, [exercise?.id]);
+
   if (!exercise) return null;
 
   const regObj = EXDB.find((e) => e.n.toLowerCase() === exercise.reg?.toLowerCase());
   const progObj = EXDB.find((e) => e.n.toLowerCase() === exercise.prog?.toLowerCase());
   const toonImg = TOON_IMAGES[exercise.id] || (exercise.cat === "calis" ? "/illustrations/pullup.jpg" : null);
 
+  const handleBackdropClick = (e) => {
+    if (Date.now() - openTimeRef.current < 300) return;
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="ov show" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="ov show" onClick={handleBackdropClick}>
       <div className="sheet" style={{ maxWidth: "700px" }}>
         <button className="xbtn" onClick={onClose}>✕</button>
 

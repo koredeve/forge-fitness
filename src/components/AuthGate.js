@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function AuthGate({ title, subtitle, icon = "🔐", children }) {
   const { user, loading, openAuthModal } = useAuth();
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <div style={{ textAlign: "center", padding: "80px 20px" }}>
         <div className="clk" style={{ fontSize: "32px" }}>⏳</div>

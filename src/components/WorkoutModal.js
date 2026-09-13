@@ -7,6 +7,13 @@ import { useAuth } from "@/context/AuthContext";
 export default function WorkoutModal({ workout, onClose }) {
   const { startWorkout } = useFitness();
   const { user, openAuthModal } = useAuth();
+  const openTimeRef = React.useRef(0);
+
+  React.useEffect(() => {
+    if (workout) {
+      openTimeRef.current = Date.now();
+    }
+  }, [workout?.id]);
 
   if (!workout) return null;
 
@@ -19,8 +26,16 @@ export default function WorkoutModal({ workout, onClose }) {
     onClose();
   };
 
+  const handleBackdropClick = (e) => {
+    // Guard against touch event bleed-through from opening card
+    if (Date.now() - openTimeRef.current < 300) return;
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="ov show" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="ov show" onClick={handleBackdropClick}>
       <div className="sheet">
         <button className="xbtn" onClick={onClose}>✕</button>
 

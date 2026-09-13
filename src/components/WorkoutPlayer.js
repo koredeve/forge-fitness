@@ -235,44 +235,58 @@ export default function WorkoutPlayer() {
   return (
     <div id="sov" className="show">
       {/* Top Header Bar */}
-      <div className="shd" style={{ background: "rgba(11, 13, 16, 0.96)", backdropFilter: "blur(14px)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "10px", fontWeight: "900" }}>
-            🔥 LIVE COACH
+      <div
+        className="shd"
+        style={{
+          background: "rgba(11, 13, 16, 0.96)",
+          backdropFilter: "blur(14px)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "10px 14px",
+          gap: "8px"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flex: 1 }}>
+          <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "9.5px", fontWeight: "900", padding: "3px 6px", whiteSpace: "nowrap", flexShrink: 0 }}>
+            🔥 LIVE
           </span>
-          <div>
-            <b className="bigt" style={{ fontSize: "16px" }}>{activeSession.n}</b>
-            <div className="mut sm" style={{ fontSize: "11px" }}>{activeSession.tag}</div>
+          <div style={{ minWidth: 0 }}>
+            <b className="bigt" style={{ fontSize: "14px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{activeSession.n}</b>
+            <div className="mut sm" style={{ fontSize: "10.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{activeSession.tag}</div>
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "5px", alignItems: "center", flexShrink: 0 }}>
           <button
             className="btn gh sm"
-            style={{ padding: "6px 10px", fontSize: "12px", background: soundEnabled ? "rgba(255, 107, 44, 0.15)" : undefined, borderColor: soundEnabled ? "var(--acc)" : undefined }}
+            style={{ padding: "6px 8px", fontSize: "12px", background: soundEnabled ? "rgba(255, 107, 44, 0.15)" : undefined, borderColor: soundEnabled ? "var(--acc)" : undefined }}
             onClick={() => setSoundEnabled(!soundEnabled)}
             title="Toggle Voice & Sound"
           >
-            {soundEnabled ? "🔊 Voice On" : "🔇 Muted"}
+            {soundEnabled ? "🔊" : "🔇"}
           </button>
           <button
             className="btn gh sm"
-            style={{ padding: "6px 10px", fontSize: "12px" }}
+            style={{ padding: "6px 8px", fontSize: "12px" }}
             onClick={() => setIsRunning(!isRunning)}
+            title={isRunning ? "Pause" : "Resume"}
           >
-            {isRunning ? "⏸ Pause" : "▶ Resume"}
+            {isRunning ? "⏸" : "▶"}
           </button>
           <button
             className="btn gh sm"
-            style={{ padding: "6px 10px", fontSize: "12px" }}
+            style={{ padding: "6px 8px", fontSize: "12px" }}
             onClick={advanceStep}
+            title="Skip"
           >
-            ⏭ Skip
+            ⏭
           </button>
           <button
             className="btn gh sm"
-            style={{ padding: "6px 10px", fontSize: "14px" }}
+            style={{ padding: "6px 8px", fontSize: "13px" }}
             onClick={() => setShowQuitConfirm(true)}
+            title="Exit"
           >
             ✕
           </button>
@@ -512,7 +526,7 @@ export default function WorkoutPlayer() {
                       DO {targetReps} REPS NOW
                     </h2>
                     <span className="mut sm" style={{ fontSize: "13px", display: "block", marginTop: "4px" }}>
-                      Set {currentStep?.set} of {currentStep?.sets} · Follow the video demo on the left
+                      Set {currentStep?.set} of {currentStep?.sets} · Follow the form video reference
                     </span>
                   </>
                 ) : (

@@ -39,6 +39,8 @@ export function AuthProvider({ children }) {
     }
 
     setUser(currentUser);
+    setLoading(false);
+
     const emailLower = (currentUser.email || "").toLowerCase();
     const isVip = VIP_PRO_EMAILS.includes(emailLower);
 
@@ -64,8 +66,6 @@ export function AuthProvider({ children }) {
       }
     } catch (e) {
       if (isVip) setIsPro(true);
-    } finally {
-      setLoading(false);
     }
   };
 
