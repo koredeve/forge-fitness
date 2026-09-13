@@ -135,7 +135,7 @@ export default function Home() {
       </div>
 
       {/* Guest Mode Banner if not logged in */}
-      {!user && (
+      {!user ? (
         <div
           style={{
             background: "rgba(255, 107, 44, 0.08)",
@@ -164,6 +164,44 @@ export default function Home() {
           >
             Sign In / Register →
           </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            background: "rgba(62, 213, 152, 0.08)",
+            border: "1px solid rgba(62, 213, 152, 0.35)",
+            borderRadius: "14px",
+            padding: "12px 18px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+            marginBottom: "20px"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "20px" }}>👋</span>
+            <div>
+              <b style={{ color: "var(--ok)", fontSize: "14px" }}>
+                Welcome, {user.displayName || user.email?.split("@")[0]}!
+              </b>
+              <span className="mut sm" style={{ display: "block", fontSize: "12px" }}>
+                Active session · Progress and workouts synced to cloud
+              </span>
+            </div>
+          </div>
+          <span
+            className="pill"
+            style={{
+              borderColor: user ? "rgba(62, 213, 152, 0.4)" : "var(--ln)",
+              color: "#3ed598",
+              fontSize: "11px",
+              fontWeight: "600"
+            }}
+          >
+            ● Logged In
+          </span>
         </div>
       )}
 

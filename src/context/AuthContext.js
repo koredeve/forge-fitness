@@ -30,12 +30,55 @@ export function AuthProvider({ children }) {
   const [authModalState, setAuthModalState] = useState({ isOpen: false, subtitle: "", defaultMode: "signin" });
   const [proModalState, setProModalState] = useState({ isOpen: false, featureName: "" });
 
+  const handleUserSession = async (currentUser) => {
+    if (!currentUser) {
+      setUser(null);
+      setIsPro(false);
+      setLoading(false);
+      return;
+    }
+
+    setUser(currentUser);
+    const emailLower = (currentUser.email || "").toLowerCase();
+    const isVip = VIP_PRO_EMAILS.includes(emailLower);
+
+    if (isVip) {
+      setIsPro(true);
+    }
+
+    try {
+      const userRef = doc(db, "users", currentUser.uid);
+      const docSnap = await getDoc(userRef).catch(() => null);
+      if (docSnap && docSnap.exists()) {
+        const data = docSnap.data();
+        setIsPro(isVip || data.plan === "pro");
+        if (isVip && data.plan !== "pro") {
+          await setDoc(userRef, { plan: "pro" }, { merge: true }).catch(() => {});
+        }
+      } else {
+        await setDoc(userRef, {
+          email: currentUser.email,
+          createdAt: new Date().toISOString(),
+          plan: isVip ? "pro" : "free"
+        }, { merge: true }).catch(() => {});
+      }
+    } catch (e) {
+      if (isVip) setIsPro(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
+    let isMounted = true;
+
     // Process redirect sign-in results from mobile Google login
     getRedirectResult(auth)
       .then((result) => {
+        if (!isMounted) return;
         if (result?.user) {
           console.log("Mobile Google redirect sign-in successful:", result.user.email);
+          handleUserSession(result.user);
         }
       })
       .catch((err) => {
@@ -43,42 +86,14 @@ export function AuthProvider({ children }) {
       });
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      if (currentUser) {
-        const emailLower = (currentUser.email || "").toLowerCase();
-        const isVip = VIP_PRO_EMAILS.includes(emailLower);
-
-        if (isVip) {
-          setIsPro(true);
-        }
-
-        try {
-          const userRef = doc(db, "users", currentUser.uid);
-          const docSnap = await getDoc(userRef).catch(() => null);
-          if (docSnap && docSnap.exists()) {
-            const data = docSnap.data();
-            setIsPro(isVip || data.plan === "pro");
-            if (isVip && data.plan !== "pro") {
-              await setDoc(userRef, { plan: "pro" }, { merge: true }).catch(() => {});
-            }
-          } else {
-            await setDoc(userRef, {
-              email: currentUser.email,
-              createdAt: new Date().toISOString(),
-              plan: isVip ? "pro" : "free"
-            }, { merge: true }).catch(() => {});
-          }
-        } catch (e) {
-          // Graceful offline fallback
-          if (isVip) setIsPro(true);
-        }
-      } else {
-        setIsPro(false);
-      }
+      if (!isMounted) return;
+      handleUserSession(currentUser);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const signup = (email, password) => {

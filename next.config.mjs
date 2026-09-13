@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compress: true,
+  async rewrites() {
+    return [
+      {
+        source: "/__/auth/:path*",
+        destination: "https://forge-fitness-a426e.firebaseapp.com/__/auth/:path*"
+      }
+    ];
+  },
   async headers() {
     return [
       {

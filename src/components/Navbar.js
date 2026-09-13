@@ -101,6 +101,30 @@ export default function Navbar() {
               )}
             </div>
 
+            {/* Mobile User Tag if logged in */}
+            {user && (
+              <div
+                className="mobile-user-tag"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  background: "rgba(62, 213, 152, 0.1)",
+                  border: "1px solid rgba(62, 213, 152, 0.3)",
+                  borderRadius: "20px",
+                  padding: "4px 8px",
+                  fontSize: "11px",
+                  color: "#3ed598",
+                  fontWeight: "600"
+                }}
+              >
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3ed598" }}></span>
+                <span style={{ maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user.displayName?.split(" ")[0] || user.email?.split("@")[0]}
+                </span>
+              </div>
+            )}
+
             {/* Mobile Hamburger Toggle Button */}
             <button
               className="mobile-burger-btn"
