@@ -4,6 +4,18 @@ import WorkoutPlayer from "@/components/WorkoutPlayer";
 import GlobalModals from "@/components/GlobalModals";
 import { AuthProvider } from "@/context/AuthContext";
 import { FitnessProvider } from "@/context/FitnessContext";
+import { Inter, Archivo } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["800", "900"],
+  display: "swap",
+});
 
 export const viewport = {
   themeColor: "#0b0d10",
@@ -17,13 +29,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
+      <body className={`${inter.className}`}>
         <AuthProvider>
           <FitnessProvider>
             <Navbar />

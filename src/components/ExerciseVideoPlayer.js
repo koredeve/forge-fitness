@@ -156,6 +156,7 @@ export default function ExerciseVideoPlayer({ exerciseId, exerciseName, category
           muted
           autoPlay
           playsInline
+          preload="metadata"
           onTimeUpdate={handleTimeUpdate}
           style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
         />
