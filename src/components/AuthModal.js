@@ -45,20 +45,25 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
     setLoading(true);
     try {
       await loginWithGoogle();
+      // On popup completion (on desktop)
       onClose();
     } catch (err) {
       console.error("Google Auth Error:", err);
       if (err.code === "auth/unauthorized-domain") {
-        setError("Domain not authorized. Please add 'forge-mvp-three.vercel.app' to Firebase Console -> Authentication -> Settings -> Authorized domains.");
-      } else if (err.code === "auth/popup-closed-by-user") {
-        setError("Google sign-in popup was closed before completing.");
+        setError("Domain not authorized. Please ensure 'forgecali.vercel.app' is added to Firebase Console -> Authentication -> Settings -> Authorized domains.");
+      } else if (err.code === "auth/popup-closed-by-user" || err.code === "auth/popup-blocked") {
+        setError("Google sign-in popup was closed or blocked. On mobile, redirect has been initiated, or you can use Email/Password sign up above.");
       } else if (err.code === "auth/operation-not-allowed" || err.code === "auth/configuration-not-found") {
         setError("Google Sign-In is not enabled yet. Please enable 'Google' in Firebase Console -> Authentication -> Sign-in method.");
       } else {
         setError(err.message || "Google authentication failed. Please try Email/Password or check Firebase settings.");
       }
     } finally {
-      setLoading(false);
+      // Keep loading on mobile while redirecting
+      const isMobile = typeof window !== "undefined" && /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (!isMobile) {
+        setLoading(false);
+      }
     }
   };
 
@@ -283,7 +288,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
               d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
             />
           </svg>
-          Continue with Google
+          {loading ? "Connecting..." : "Continue with Google"}
         </button>
       </div>
     </div>

@@ -6,7 +6,9 @@ import {
   createUserWithEmailAndPassword, 
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -29,6 +31,17 @@ export function AuthProvider({ children }) {
   const [proModalState, setProModalState] = useState({ isOpen: false, featureName: "" });
 
   useEffect(() => {
+    // Process redirect sign-in results from mobile Google login
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          console.log("Mobile Google redirect sign-in successful:", result.user.email);
+        }
+      })
+      .catch((err) => {
+        console.error("Redirect sign-in error:", err);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -76,9 +89,33 @@ export function AuthProvider({ children }) {
     return signInWithEmailAndPassword(auth, email, password);
   };
 
-  const loginWithGoogle = () => {
+  const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    provider.setCustomParameters({ prompt: "select_account" });
+
+    const isMobile = typeof window !== "undefined" && (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth <= 768
+    );
+
+    // On mobile browsers, popups get blocked or closed during tab switches; use redirect
+    if (isMobile) {
+      return signInWithRedirect(auth, provider);
+    }
+
+    // On desktop, try popup first; if blocked or closed, fallback to redirect
+    try {
+      return await signInWithPopup(auth, provider);
+    } catch (popupError) {
+      if (
+        popupError.code === "auth/popup-blocked" ||
+        popupError.code === "auth/popup-closed-by-user" ||
+        popupError.code === "auth/cancelled-popup-request"
+      ) {
+        return signInWithRedirect(auth, provider);
+      }
+      throw popupError;
+    }
   };
 
   const logout = () => {
