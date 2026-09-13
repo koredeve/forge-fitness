@@ -72,3 +72,27 @@ export const SKILLS=[
 {id:'lsit',icon:'🪑',n:'L-Sit → V-Sit',lv:[['Foot-Supported · 30s','Push down, lift light'],['Tuck · 20s','Knees up, shoulders down'],['One-Leg · 15s / side','Extend one leg'],['L-Sit · 10s','Both legs locked'],['L-Sit · 30s','Cruise altitude'],['V-Sit · 5s','Toes above eyes']]}];
 
 export const TESTS=[{id:'push',n:'Max Push-Ups',u:'reps'},{id:'pull',n:'Max Pull-Ups',u:'reps'},{id:'dip',n:'Max Dips',u:'reps'},{id:'plank',n:'Max Plank',u:'sec'}];
+
+export const EXERCISE_SKILL_MAP = {
+  scap: 'pullup',
+  negpull: 'pullup',
+  pullup: 'pullup',
+  chinup: 'pullup',
+  exppull: 'muscleup',
+  muscleup: 'muscleup',
+  dip: 'dip',
+  pike: 'hstand',
+  hspu: 'hstand',
+  planche: 'planche',
+  frontlev: 'flev',
+  flev: 'flev',
+  squat: 'pistol',
+  bulg: 'pistol',
+  pistol: 'pistol',
+  nordic: 'nordic',
+  plank: 'lsit',
+  sidep: 'lsit',
+  hollow: 'lsit',
+  legraise: 'lsit',
+  rollout: 'lsit'
+};

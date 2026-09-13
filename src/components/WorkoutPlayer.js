@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useFitness } from "@/context/FitnessContext";
-import { EXDB } from "@/data/db";
+import { EXDB, SKILLS, EXERCISE_SKILL_MAP } from "@/data/db";
 
 // Video and image media definitions
 const EXERCISE_MEDIA = {
@@ -49,7 +49,7 @@ const EXERCISE_MEDIA = {
 };
 
 export default function WorkoutPlayer() {
-  const { activeSession, setActiveSession, playBeep, addLog } = useFitness();
+  const { activeSession, setActiveSession, playBeep, addLog, skills, advanceSkill } = useFitness();
 
   const [stepIdx, setStepIdx] = useState(0);
   const [timer, setTimer] = useState(0);
@@ -63,6 +63,19 @@ export default function WorkoutPlayer() {
   const [startTime, setStartTime] = useState(Date.now());
   const intervalRef = useRef(null);
   const videoRef = useRef(null);
+
+  // Identify calisthenics skill trees trained in this session
+  const trainedSkills = React.useMemo(() => {
+    if (!activeSession?.ex) return [];
+    const skillIds = Array.from(
+      new Set(
+        activeSession.ex
+          .map((e) => EXERCISE_SKILL_MAP[e.x])
+          .filter(Boolean)
+      )
+    );
+    return skillIds.map((id) => SKILLS.find((s) => s.id === id)).filter(Boolean);
+  }, [activeSession]);
 
   // Clear, natural, audible voice coach (rate: 0.88, loud and distinct)
   const speakVoice = (text) => {
@@ -189,14 +202,12 @@ export default function WorkoutPlayer() {
       d: new Date().toISOString().slice(0, 10),
       n: activeSession.n,
       cat: activeSession.cat,
-      min: mins
+      min: mins,
+      exercises: activeSession.ex.map((e) => e.x)
     });
     playBeep(880, 0.15);
     setTimeout(() => playBeep(1200, 0.35), 220);
     speakVoice(`Congratulations! Workout complete! You earned ${earnedXp + 50} experience points.`);
-    setTimeout(() => {
-      setActiveSession(null);
-    }, 3200);
   };
 
   useEffect(() => {
@@ -447,24 +458,113 @@ export default function WorkoutPlayer() {
         {/* Right: Step-by-Step Instructions & Clean Action */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
           {isDone ? (
-            <div style={{ textAlign: "center", padding: "20px" }}>
-              <div style={{ fontSize: "64px" }}>🏆</div>
-              <h2 style={{ fontSize: "28px", color: "var(--ok)", margin: "10px 0 4px" }}>
+            <div style={{ textAlign: "center", padding: "16px 10px", width: "100%", maxWidth: "460px" }}>
+              <div style={{ fontSize: "56px" }}>🏆</div>
+              <h2 style={{ fontSize: "26px", color: "var(--ok)", margin: "8px 0 4px" }}>
                 Workout Crushed!
               </h2>
-              <p className="mut sm" style={{ fontSize: "14px" }}>
-                Great hustle! Total session saved and streak updated in the cloud.
+              <p className="mut sm" style={{ fontSize: "13.5px", margin: "0 auto 10px" }}>
+                Session saved & weekly volume logged in the cloud.
               </p>
-              <div style={{ marginTop: "16px", fontSize: "18px", fontWeight: "800", color: "var(--acc)" }}>
+              <div style={{ fontSize: "16px", fontWeight: "800", color: "var(--acc)" }}>
                 ⭐ +{earnedXp + 50} XP Earned!
               </div>
+
+              {/* Trained Skills & Progressive Milestones */}
+              {trainedSkills.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    background: "rgba(18, 22, 27, 0.75)",
+                    border: "1px solid var(--ln)",
+                    borderRadius: "14px",
+                    padding: "14px",
+                    textAlign: "left"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--acc)" }}>
+                      🎯 Calisthenics Progression
+                    </span>
+                    <span style={{ fontSize: "11px", color: "var(--mut)" }}>
+                      Weekly routine
+                    </span>
+                  </div>
+
+                  {trainedSkills.map((s) => {
+                    const userLevels = skills[s.id] || [];
+                    const doneCount = userLevels.filter(Boolean).length;
+                    const isAllDone = doneCount >= s.lv.length;
+                    const currentMilestone = !isAllDone ? s.lv[doneCount] : null;
+
+                    return (
+                      <div
+                        key={s.id}
+                        style={{
+                          padding: "10px",
+                          margin: "8px 0",
+                          borderRadius: "10px",
+                          background: "rgba(255, 255, 255, 0.03)",
+                          border: "1px solid var(--ln)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "8px",
+                          flexWrap: "wrap"
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: "160px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "15px" }}>{s.icon}</span>
+                            <b style={{ fontSize: "13px" }}>{s.n}</b>
+                            <span className="pill sm" style={{ fontSize: "9.5px", padding: "1px 5px" }}>
+                              Lv{doneCount}/{s.lv.length}
+                            </span>
+                          </div>
+                          {currentMilestone && (
+                            <div style={{ fontSize: "11.5px", color: "var(--mut)", marginTop: "3px" }}>
+                              Target: <b style={{ color: "var(--tx)" }}>Lv{doneCount + 1} · {currentMilestone[0]}</b>
+                              <span style={{ display: "block", color: "var(--mut)", fontSize: "11px" }}>
+                                {currentMilestone[1]}
+                              </span>
+                            </div>
+                          )}
+                          {isAllDone && (
+                            <div style={{ fontSize: "11.5px", color: "var(--ok)", marginTop: "3px" }}>
+                              ✓ 100% Tree Mastered!
+                            </div>
+                          )}
+                        </div>
+
+                        {!isAllDone && (
+                          <button
+                            className="btn sm"
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "11.5px",
+                              background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
+                              whiteSpace: "nowrap"
+                            }}
+                            onClick={() => advanceSkill(s.id)}
+                          >
+                            🚀 Advance Lv{doneCount + 1}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <button
                 className="btn"
                 onClick={() => setActiveSession(null)}
                 style={{
-                  marginTop: "20px",
-                  padding: "12px 28px",
-                  fontSize: "14px",
+                  marginTop: "18px",
+                  width: "100%",
+                  justifyContent: "center",
+                  padding: "12px 24px",
+                  fontSize: "14.5px",
                   background: "linear-gradient(135deg, #3ed598 0%, #209968 100%)",
                   color: "#000",
                   fontWeight: "800"

@@ -148,7 +148,11 @@ export default function Calis() {
 
                 <div className="lvls" style={{ display: isOpen ? "block" : "none", marginTop: "14px" }}>
                   {s.lv.map((l, i) => {
-                    const isLockedLevel = !isPro && (!FREE_SKILLS.includes(s.id) || i >= 2);
+                    const isProLocked = !isPro && (!FREE_SKILLS.includes(s.id) || i >= 2);
+                    const isMastered = i < doneCount;
+                    const isCurrentTarget = i === doneCount && !isProLocked;
+                    const isFutureLocked = i > doneCount && !isProLocked;
+
                     return (
                       <div
                         key={i}
@@ -156,9 +160,19 @@ export default function Calis() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          padding: "8px 0",
-                          borderBottom: "1px dashed var(--ln)",
-                          opacity: isLockedLevel ? 0.75 : 1
+                          padding: "10px 12px",
+                          margin: "6px 0",
+                          borderRadius: "10px",
+                          border: isCurrentTarget
+                            ? "1px solid rgba(255, 107, 44, 0.45)"
+                            : "1px dashed var(--ln)",
+                          background: isCurrentTarget
+                            ? "rgba(255, 107, 44, 0.06)"
+                            : isMastered
+                            ? "rgba(62, 213, 152, 0.04)"
+                            : "transparent",
+                          opacity: isProLocked || isFutureLocked ? 0.65 : 1,
+                          transition: "all 0.2s ease"
                         }}
                       >
                         <label
@@ -168,26 +182,56 @@ export default function Calis() {
                             handleLevelClick(s.id, i, s.n);
                           }}
                         >
-                          {isLockedLevel ? (
+                          {isProLocked ? (
                             <span style={{ fontSize: "14px", color: "var(--acc)" }}>🔒</span>
                           ) : (
                             <input
                               type="checkbox"
-                              checked={!!userLevels[i]}
+                              checked={isMastered}
                               onChange={() => {}}
+                              style={{
+                                accentColor: "var(--ok)",
+                                width: "17px",
+                                height: "17px",
+                                cursor: "pointer"
+                              }}
                             />
                           )}
-                          <span>
-                            <b style={{ color: userLevels[i] ? "var(--ok)" : isLockedLevel ? "var(--mut)" : "var(--tx)" }}>
-                              Lv{i + 1} · {l[0]} {isLockedLevel && <span style={{ fontSize: "10px", color: "var(--acc)" }}>(PRO)</span>}
-                            </b>
-                            <span className="crit" style={{ display: "block" }}>{l[1]}</span>
-                          </span>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                              <b style={{ color: isMastered ? "var(--ok)" : isCurrentTarget ? "var(--acc)" : "var(--tx)", fontSize: "13.5px" }}>
+                                Lv{i + 1} · {l[0]}
+                              </b>
+                              {isProLocked && (
+                                <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "9px", padding: "1px 5px" }}>
+                                  👑 PRO
+                                </span>
+                              )}
+                              {isMastered && (
+                                <span className="pill" style={{ borderColor: "var(--ok)", color: "var(--ok)", fontSize: "9px", padding: "1px 5px" }}>
+                                  ✓ Mastered
+                                </span>
+                              )}
+                              {isCurrentTarget && (
+                                <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "9px", padding: "1px 5px" }}>
+                                  🎯 Current Target
+                                </span>
+                              )}
+                              {isFutureLocked && (
+                                <span style={{ fontSize: "10px", color: "var(--mut)" }}>
+                                  (Requires Lv{i})
+                                </span>
+                              )}
+                            </div>
+                            <span className="crit" style={{ display: "block", fontSize: "12px", marginTop: "2px" }}>
+                              {l[1]}
+                            </span>
+                          </div>
                         </label>
 
                         <button
                           className="btn gh sm"
-                          style={{ padding: "4px 8px", fontSize: "11px", whiteSpace: "nowrap" }}
+                          style={{ padding: "4px 8px", fontSize: "11px", whiteSpace: "nowrap", marginLeft: "8px" }}
                           onClick={(e) => {
                             e.stopPropagation();
                             openFormPreview(l[0], s.id);
