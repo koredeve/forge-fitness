@@ -677,7 +677,13 @@ ul.rl li {
 @media (max-width: 768px) {
   #sov .sbd {
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    gap: 14px !important;
+    padding: 12px 14px !important;
+  }
+  #sov .sbd > div:first-child {
+    height: 220px !important;
+    max-height: 38vh !important;
+    border-radius: 16px !important;
   }
 }
 .ph {
