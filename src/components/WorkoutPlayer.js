@@ -12,7 +12,7 @@ const EXERCISE_MEDIA = {
   chinup: { img: "/illustrations/pullup.jpg", video: "/videos/chinup.mp4" },
   negpull: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
   exppull: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
-  scap: { img: "/illustrations/pullup.jpg", video: "/videos/scap.mp4" },
+  scap: { img: "/illustrations/pullup.jpg", video: "/videos/pullup.mp4" },
   row: { img: "/illustrations/pullup.jpg", video: "/videos/row.mp4" },
   muscleup: { img: "/illustrations/muscleup.jpg", video: "/videos/muscleup.mp4" },
   hstand: { img: "/illustrations/hstand.jpg", video: "/videos/hstand.mp4" },
