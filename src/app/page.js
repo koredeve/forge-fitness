@@ -48,10 +48,10 @@ export default function Home() {
   const [previewWorkout, setPreviewWorkout] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
 
-  const streak = getStreak();
-  const mastery = getSkillsPct();
-  const total = logs.length;
-  const wk = logs.filter((s) => Date.now() - new Date(s.d).getTime() < 7 * 864e5).length;
+  const streak = user ? getStreak() : 0;
+  const mastery = user ? getSkillsPct() : 0;
+  const total = user ? logs.length : 0;
+  const wk = user ? logs.filter((s) => Date.now() - new Date(s.d).getTime() < 7 * 864e5).length : 0;
 
   const dateStr = new Date().toLocaleDateString(undefined, {
     weekday: "long",

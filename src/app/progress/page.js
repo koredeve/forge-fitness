@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import AuthGate from "@/components/AuthGate";
 
 export default function Progress() {
-  const { logs, prs, addLog, deleteLog, addPR, getStreak } = useFitness();
+  const { logs, prs, addLog, deleteLog, addPR, getStreak, clearAllLogs } = useFitness();
   const { user } = useAuth();
 
   const [sessName, setSessName] = useState("");
@@ -196,7 +196,25 @@ export default function Progress() {
             </button>
           </form>
 
-          <div style={{ marginTop: "14px" }}>
+          <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="mut sm" style={{ fontWeight: 600 }}>Recent Logged Sessions</span>
+            {logs.length > 0 && (
+              <button
+                type="button"
+                className="mut sm"
+                style={{ fontSize: "11px", color: "#f87171", cursor: "pointer", background: "none", border: "none" }}
+                onClick={() => {
+                  if (window.confirm("Reset all logged workouts and training history?")) {
+                    clearAllLogs();
+                  }
+                }}
+              >
+                🗑 Reset History
+              </button>
+            )}
+          </div>
+
+          <div style={{ marginTop: "10px" }}>
             {logs.length > 0 ? (
               logs.slice(0, 12).map((s, i) => (
                 <div key={i} className="si">

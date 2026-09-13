@@ -46,79 +46,62 @@ export function FitnessProvider({ children }) {
     }
   };
 
-  // 1. Initial load from local storage
+  // 1. Initial load sound preference from local storage
   useEffect(() => {
     try {
-      const localLogs = JSON.parse(localStorage.getItem("forge.log") || "[]");
-      const localPrs = JSON.parse(localStorage.getItem("forge.pr") || "{}");
-      const localSkills = JSON.parse(localStorage.getItem("forge.skills") || "{}");
       const localSound = JSON.parse(localStorage.getItem("forge.sound") || "true");
-
-      setLogs(localLogs);
-      setPrs(localPrs);
-      setSkills(localSkills);
       setSound(localSound);
     } catch (e) {
       console.warn("Storage access notice:", e);
     }
   }, []);
 
-  // 2. Fetch from Firestore safely with smart bidirectional merge
+  // 2. Fetch from Firestore and user-scoped storage safely
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Logged out / guest preview mode: reset all in-memory user data
+      setLogs([]);
+      setPrs({});
+      setSkills({});
+      setActiveSession(null);
+      // Clean legacy un-scoped test logs from localStorage to prevent guest preview leakage
+      try {
+        localStorage.removeItem("forge.log");
+        localStorage.removeItem("forge.pr");
+        localStorage.removeItem("forge.skills");
+      } catch (e) {}
+      return;
+    }
+
+    const uid = user.uid;
+    // Load local cache for this specific user
+    try {
+      const localLogs = JSON.parse(localStorage.getItem(`forge.log_${uid}`) || "[]");
+      const localPrs = JSON.parse(localStorage.getItem(`forge.pr_${uid}`) || "{}");
+      const localSkills = JSON.parse(localStorage.getItem(`forge.skills_${uid}`) || "{}");
+      setLogs(localLogs);
+      setPrs(localPrs);
+      setSkills(localSkills);
+    } catch (e) {}
 
     const fetchFirestoreData = async () => {
       try {
-        const userRef = doc(db, "users", user.uid);
+        const userRef = doc(db, "users", uid);
         const snap = await getDoc(userRef).catch(() => null);
-        const localLogs = JSON.parse(localStorage.getItem("forge.log") || "[]");
-        const localPrs = JSON.parse(localStorage.getItem("forge.pr") || "{}");
-        const localSkills = JSON.parse(localStorage.getItem("forge.skills") || "{}");
 
         if (snap && snap.exists()) {
           const data = snap.data();
           const remoteLogs = data.logs || [];
-          
-          // Smart merge logs by id or unique signature
-          const map = new Map();
-          remoteLogs.forEach((l) => map.set(l.id || `${l.d}_${l.n}_${l.min}`, l));
-          localLogs.forEach((l) => {
-            const key = l.id || `${l.d}_${l.n}_${l.min}`;
-            if (!map.has(key)) map.set(key, l);
-          });
-          const mergedLogs = Array.from(map.values());
-          setLogs(mergedLogs);
-          localStorage.setItem("forge.log", JSON.stringify(mergedLogs));
-
-          // Merge PRs
           const remotePrs = data.prs || {};
-          const mergedPrs = { ...localPrs, ...remotePrs };
-          setPrs(mergedPrs);
-          localStorage.setItem("forge.pr", JSON.stringify(mergedPrs));
-
-          // Merge skills
           const remoteSkills = data.skills || {};
-          const mergedSkills = { ...localSkills, ...remoteSkills };
-          setSkills(mergedSkills);
-          localStorage.setItem("forge.skills", JSON.stringify(mergedSkills));
 
-          // Sync any newly merged items back to remote
-          if (mergedLogs.length > remoteLogs.length) {
-            await setDoc(
-              userRef,
-              { logs: mergedLogs, prs: mergedPrs, skills: mergedSkills, updatedAt: new Date().toISOString() },
-              { merge: true }
-            ).catch(() => {});
-          }
-        } else {
-          // If first sign-in on an account, upload existing local logs immediately
-          if (localLogs.length > 0 || Object.keys(localPrs).length > 0) {
-            await setDoc(
-              userRef,
-              { logs: localLogs, prs: localPrs, skills: localSkills, updatedAt: new Date().toISOString() },
-              { merge: true }
-            ).catch(() => {});
-          }
+          setLogs(remoteLogs);
+          setPrs(remotePrs);
+          setSkills(remoteSkills);
+
+          localStorage.setItem(`forge.log_${uid}`, JSON.stringify(remoteLogs));
+          localStorage.setItem(`forge.pr_${uid}`, JSON.stringify(remotePrs));
+          localStorage.setItem(`forge.skills_${uid}`, JSON.stringify(remoteSkills));
         }
       } catch (e) {
         // Fall back gracefully to local storage
@@ -128,34 +111,56 @@ export function FitnessProvider({ children }) {
     fetchFirestoreData();
   }, [user]);
 
-  // 3. Persist to local storage & Firestore
+  // 3. Persist to user-scoped local storage & Firestore
   const persistData = async (newLogs, newPrs, newSkills) => {
+    if (!user) return;
+    const uid = user.uid;
     try {
-      localStorage.setItem("forge.log", JSON.stringify(newLogs));
-      localStorage.setItem("forge.pr", JSON.stringify(newPrs));
-      localStorage.setItem("forge.skills", JSON.stringify(newSkills));
+      localStorage.setItem(`forge.log_${uid}`, JSON.stringify(newLogs));
+      localStorage.setItem(`forge.pr_${uid}`, JSON.stringify(newPrs));
+      localStorage.setItem(`forge.skills_${uid}`, JSON.stringify(newSkills));
 
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
-        await setDoc(
-          userRef,
-          {
-            logs: newLogs,
-            prs: newPrs,
-            skills: newSkills,
-            updatedAt: new Date().toISOString()
-          },
-          { merge: true }
-        ).catch((err) => {
-          console.warn("Cloud sync deferred:", err);
-        });
-      }
+      const userRef = doc(db, "users", uid);
+      await setDoc(
+        userRef,
+        {
+          logs: newLogs,
+          prs: newPrs,
+          skills: newSkills,
+          updatedAt: new Date().toISOString()
+        },
+        { merge: true }
+      ).catch((err) => {
+        console.warn("Cloud sync deferred:", err);
+      });
     } catch (e) {
       // Storage fallback
     }
   };
 
+  const clearAllLogs = async () => {
+    setLogs([]);
+    setPrs({});
+    setSkills({});
+    if (user) {
+      const uid = user.uid;
+      try {
+        localStorage.removeItem(`forge.log_${uid}`);
+        localStorage.removeItem(`forge.pr_${uid}`);
+        localStorage.removeItem(`forge.skills_${uid}`);
+        const userRef = doc(db, "users", uid);
+        await setDoc(
+          userRef,
+          { logs: [], prs: {}, skills: {}, updatedAt: new Date().toISOString() },
+          { merge: true }
+        ).catch(() => {});
+      } catch (e) {}
+    }
+    showToast("Training logs & history reset ✔");
+  };
+
   const addLog = async (entry) => {
+    if (!user) return;
     const logItem = {
       id: entry.id || `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       d: entry.d || new Date().toISOString().slice(0, 10),
@@ -255,7 +260,8 @@ export function FitnessProvider({ children }) {
         getSkillsPct,
         activeSession,
         setActiveSession,
-        startWorkout
+        startWorkout,
+        clearAllLogs
       }}
     >
       {children}
