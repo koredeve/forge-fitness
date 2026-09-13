@@ -39,7 +39,7 @@ const LOCAL_VIDEOS = {
   rope: "/videos/rope.mp4",
   shadow: "/videos/burpee.mp4",
   plank: "/videos/plank.mp4",
-  sidep: "/videos/plank.mp4",
+  sidep: "/videos/sidep.mp4",
   wrist: "/videos/wrist.mp4",
   dloc: "/videos/dloc.mp4",
   dog: "/videos/dog.mp4",
