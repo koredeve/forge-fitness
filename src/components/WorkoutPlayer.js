@@ -316,120 +316,114 @@ export default function WorkoutPlayer() {
         }}
       >
         {/* Left: Real Looping Video Motion Guide / Artwork */}
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "350px",
-            background: "#000",
-            borderRadius: "20px",
-            overflow: "hidden",
-            border: isWork ? "2px solid var(--acc)" : isRest ? "2px solid var(--ok)" : "2px solid var(--warn)",
-            boxShadow: isWork ? "0 16px 48px rgba(255, 107, 44, 0.35)" : "0 14px 40px rgba(0, 0, 0, 0.7)"
-          }}
-        >
-          {viewMode === "video" && media.video ? (
-            <video
-              ref={videoRef}
-              src={media.video}
-              autoPlay
-              loop
-              muted
-              playsInline
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block"
-              }}
-            />
-          ) : (
-            <img
-              src={media.img}
-              alt={currentStep?.x}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-                filter: "contrast(115%) brightness(92%)"
-              }}
-            />
-          )}
-
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", width: "100%" }}>
           <div
             style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 100%)",
-              pointerEvents: "none"
-            }}
-          />
-
-          {/* Top Controls on Video */}
-          <div
-            style={{
-              position: "absolute",
-              top: "12px",
-              left: "12px",
-              right: "12px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center"
+              position: "relative",
+              width: "100%",
+              aspectRatio: "16 / 9",
+              background: "#080a0d",
+              borderRadius: "20px",
+              overflow: "hidden",
+              border: isWork ? "2px solid var(--acc)" : isRest ? "2px solid var(--ok)" : "2px solid var(--warn)",
+              boxShadow: isWork ? "0 16px 48px rgba(255, 107, 44, 0.35)" : "0 14px 40px rgba(0, 0, 0, 0.7)"
             }}
           >
-            <span
+            {viewMode === "video" && media.video ? (
+              <video
+                ref={videoRef}
+                src={media.video}
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  display: "block"
+                }}
+              />
+            ) : (
+              <img
+                src={media.img}
+                alt={currentStep?.x}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  display: "block"
+                }}
+              />
+            )}
+
+            {/* Top Controls on Video */}
+            <div
               style={{
-                background: isWork ? "var(--acc)" : isRest ? "var(--ok)" : "var(--warn)",
-                color: "#000",
-                padding: "4px 12px",
-                borderRadius: "99px",
-                fontSize: "10.5px",
-                fontWeight: "900",
-                letterSpacing: "0.08em"
+                position: "absolute",
+                top: "10px",
+                left: "10px",
+                right: "10px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
               }}
             >
-              {isPrep ? "🟡 GET READY" : isWork ? "🔥 WATCH & PERFORM" : "🟢 RESTING"}
-            </span>
+              <span
+                style={{
+                  background: isWork ? "var(--acc)" : isRest ? "var(--ok)" : "var(--warn)",
+                  color: "#000",
+                  padding: "4px 10px",
+                  borderRadius: "99px",
+                  fontSize: "10px",
+                  fontWeight: "900",
+                  letterSpacing: "0.08em"
+                }}
+              >
+                {isPrep ? "🟡 GET READY" : isWork ? "🔥 WATCH & PERFORM" : "🟢 RESTING"}
+              </span>
 
-            <div style={{ display: "flex", gap: "4px", background: "rgba(0,0,0,0.7)", padding: "3px", borderRadius: "8px", backdropFilter: "blur(6px)" }}>
-              <button
-                className={`btn sm ${viewMode === "video" ? "" : "gh"}`}
-                style={{ padding: "3px 8px", fontSize: "10px" }}
-                onClick={() => setViewMode("video")}
-              >
-                🎬 Video Demo
-              </button>
-              <button
-                className={`btn sm ${viewMode === "artwork" ? "" : "gh"}`}
-                style={{ padding: "3px 8px", fontSize: "10px" }}
-                onClick={() => setViewMode("artwork")}
-              >
-                🎨 Artwork
-              </button>
+              <div style={{ display: "flex", gap: "4px", background: "rgba(0,0,0,0.7)", padding: "3px", borderRadius: "8px", backdropFilter: "blur(6px)" }}>
+                <button
+                  className={`btn sm ${viewMode === "video" ? "" : "gh"}`}
+                  style={{ padding: "2px 8px", fontSize: "10px" }}
+                  onClick={() => setViewMode("video")}
+                >
+                  🎬 Video Demo
+                </button>
+                <button
+                  className={`btn sm ${viewMode === "artwork" ? "" : "gh"}`}
+                  style={{ padding: "2px 8px", fontSize: "10px" }}
+                  onClick={() => setViewMode("artwork")}
+                >
+                  🎨 Artwork
+                </button>
+              </div>
             </div>
           </div>
 
+          {/* Clean Exercise Info Bar (OUTSIDE the video frame: hands and floor are 100% visible) */}
           <div
             style={{
-              position: "absolute",
-              bottom: "12px",
-              left: "12px",
-              right: "12px",
-              background: "rgba(11, 13, 16, 0.94)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "rgba(18, 22, 27, 0.94)",
               backdropFilter: "blur(10px)",
-              padding: "10px 14px",
-              borderRadius: "12px",
+              padding: "10px 16px",
+              borderRadius: "14px",
               border: "1px solid var(--ln)"
             }}
           >
-            <span className="cali-acc" style={{ fontSize: "10px" }}>
-              {isRest ? "UP NEXT" : "CURRENT EXERCISE"}
-            </span>
-            <b style={{ color: "#fff", display: "block", fontSize: "17px", margin: "1px 0" }}>
-              {currentStep?.x}
-            </b>
-            <span className="mut sm" style={{ fontSize: "11.5px" }}>
+            <div>
+              <span className="cali-acc" style={{ fontSize: "10px", display: "block" }}>
+                {isRest ? "UP NEXT" : "CURRENT EXERCISE"}
+              </span>
+              <b style={{ color: "#fff", display: "block", fontSize: "16px", margin: "1px 0" }}>
+                {currentStep?.x}
+              </b>
+            </div>
+            <span className="pill" style={{ fontSize: "11.5px", borderColor: "var(--ln)" }}>
               {currentStep?.set ? `Set ${currentStep.set} of ${currentStep.sets}` : "Prepare your space"}
             </span>
           </div>

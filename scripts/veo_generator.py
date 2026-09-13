@@ -80,6 +80,18 @@ VEO_PROMPTS = {
     "pistol": (
         "Cinematic slow motion demonstration of a single-leg pistol squat. Standing on one leg, non-working leg "
         "held straight out horizontally in front, descending to full rock-bottom depth and standing up with control."
+    ),
+    "wrist": (
+        "Cinematic slow-motion 4K close-up of a calisthenics athlete on hands and knees performing wrist prep mobility routine "
+        "on a rubber gym mat. Smooth 360-degree circular rocks over wrists, gentle extension and flexion stretches. Studio rim lighting."
+    ),
+    "dloc": (
+        "Cinematic slow-motion 4K video of an athlete performing shoulder dislocates with a straight wooden dowel stick. "
+        "Wide overhand grip, arms held straight, smoothly passing stick from hips overhead and behind back, then reversing forward."
+    ),
+    "dog": (
+        "Cinematic slow-motion 4K video of an athlete performing a Downward-Facing Dog flow on a yoga mat. "
+        "Pushing floor away, hips driven high forming an inverted V, straight spine, pedaling heels toward floor to stretch hamstrings."
     )
 }
 
