@@ -11,6 +11,10 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
+const VIP_PRO_EMAILS = [
+  "kelightsub@gmail.com"
+];
+
 const AuthContext = createContext({});
 
 export const useAuth = () => useContext(AuthContext);
@@ -29,21 +33,32 @@ export function AuthProvider({ children }) {
       setUser(currentUser);
       setLoading(false);
       if (currentUser) {
+        const emailLower = (currentUser.email || "").toLowerCase();
+        const isVip = VIP_PRO_EMAILS.includes(emailLower);
+
+        if (isVip) {
+          setIsPro(true);
+        }
+
         try {
           const userRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(userRef).catch(() => null);
           if (docSnap && docSnap.exists()) {
             const data = docSnap.data();
-            setIsPro(data.plan === "pro");
+            setIsPro(isVip || data.plan === "pro");
+            if (isVip && data.plan !== "pro") {
+              await setDoc(userRef, { plan: "pro" }, { merge: true }).catch(() => {});
+            }
           } else {
             await setDoc(userRef, {
               email: currentUser.email,
               createdAt: new Date().toISOString(),
-              plan: "free"
+              plan: isVip ? "pro" : "free"
             }, { merge: true }).catch(() => {});
           }
         } catch (e) {
           // Graceful offline fallback
+          if (isVip) setIsPro(true);
         }
       } else {
         setIsPro(false);
