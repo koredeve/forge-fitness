@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useFitness } from "@/context/FitnessContext";
 import { EXDB } from "@/data/db";
 
-// Image & video mapping for all exercises
+// Video and image media definitions
 const EXERCISE_MEDIA = {
   pushup: { img: "/illustrations/pullup.jpg", video: "/videos/pushup.mp4" },
   diamond: { img: "/illustrations/pullup.jpg", video: "/videos/pushup.mp4" },
@@ -41,19 +41,22 @@ export default function WorkoutPlayer() {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [repsDone, setRepsDone] = useState(0);
+  const [viewMode, setViewMode] = useState("video"); // 'video' | 'artwork'
   const [earnedXp, setEarnedXp] = useState(0);
   const [showXpBadge, setShowXpBadge] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const intervalRef = useRef(null);
+  const videoRef = useRef(null);
 
-  // Text-To-Speech Coach
+  // Clear, natural, audible voice coach (rate: 0.88, loud and distinct)
   const speakVoice = (text) => {
     if (!soundEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
     try {
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
-      utter.rate = 1.05;
+      utter.rate = 0.88; // Slower, clear, and perfectly audible
       utter.pitch = 1.0;
+      utter.volume = 1.0;
       window.speechSynthesis.speak(utter);
     } catch (e) {
       // Speech fallback
@@ -120,7 +123,7 @@ export default function WorkoutPlayer() {
       setStartTime(Date.now());
       if (steps[0]) {
         setTimer(steps[0].t || 0);
-        speakVoice(`Get ready! First up: ${steps[0].x}. Target: ${steps[0].target}`);
+        speakVoice(`Get ready. First exercise is ${steps[0].x}. Target: ${steps[0].target}.`);
       }
     }
   }, [activeSession, steps]);
@@ -153,14 +156,26 @@ export default function WorkoutPlayer() {
       if (st.p === "WORK") {
         playBeep(880, 0.25);
         if (st.rep) {
-          speakVoice(`Set ${st.set}: Do ${st.rep} ${st.x}. Go!`);
+          speakVoice(`Set ${st.set}. Do ${st.rep} reps of ${st.x}. Follow the video on screen, and tap each rep as you go.`);
         } else {
-          speakVoice(`Set ${st.set}: Hold ${st.x} for ${st.t} seconds. Start!`);
+          speakVoice(`Set ${st.set}. Hold ${st.x} for ${st.t} seconds.`);
         }
       } else if (st.p === "REST") {
         playBeep(520, 0.25);
-        speakVoice(`Good job! Rest for ${st.t} seconds.`);
+        speakVoice(`Set complete! Take a rest for ${st.t} seconds.`);
       }
+    }
+  };
+
+  const handleCountRep = () => {
+    const target = currentStep?.rep || 10;
+    const nextVal = repsDone + 1;
+    setRepsDone(nextVal);
+    playBeep(880, 0.08);
+
+    if (nextVal >= target) {
+      speakVoice(`Great job! All ${target} reps completed.`);
+      advanceStep();
     }
   };
 
@@ -176,7 +191,7 @@ export default function WorkoutPlayer() {
     });
     playBeep(880, 0.15);
     setTimeout(() => playBeep(1200, 0.35), 220);
-    speakVoice(`Workout completed! Incredible effort! You earned ${earnedXp + 50} XP.`);
+    speakVoice(`Congratulations! Workout complete! You earned ${earnedXp + 50} experience points.`);
     setTimeout(() => {
       setActiveSession(null);
     }, 3200);
@@ -213,13 +228,14 @@ export default function WorkoutPlayer() {
   const isPrep = currentStep?.p === "prep";
   const isRest = currentStep?.p === "REST";
   const isWork = currentStep?.p === "WORK";
+  const targetReps = currentStep?.rep || 15;
 
   return (
     <div id="sov" className="show">
       {/* Top Header Bar */}
-      <div className="shd" style={{ background: "rgba(11, 13, 16, 0.95)", backdropFilter: "blur(12px)" }}>
+      <div className="shd" style={{ background: "rgba(11, 13, 16, 0.96)", backdropFilter: "blur(14px)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "10px" }}>
+          <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "10px", fontWeight: "900" }}>
             🔥 LIVE COACH
           </span>
           <div>
@@ -231,7 +247,7 @@ export default function WorkoutPlayer() {
         <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
           <button
             className="btn gh sm"
-            style={{ padding: "6px 10px", fontSize: "12px" }}
+            style={{ padding: "6px 10px", fontSize: "12px", background: soundEnabled ? "rgba(255, 107, 44, 0.15)" : undefined, borderColor: soundEnabled ? "var(--acc)" : undefined }}
             onClick={() => setSoundEnabled(!soundEnabled)}
             title="Toggle Voice & Sound"
           >
@@ -283,12 +299,12 @@ export default function WorkoutPlayer() {
         </div>
       )}
 
-      {/* Main Action HUD & Visual Stage */}
+      {/* Main Action Arena */}
       <div
         className="sbd"
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(280px, 440px) 1fr",
+          gridTemplateColumns: "minmax(300px, 460px) 1fr",
           gap: "24px",
           alignItems: "center",
           maxWidth: "1050px",
@@ -297,84 +313,127 @@ export default function WorkoutPlayer() {
           padding: "16px 20px"
         }}
       >
-        {/* Left: HD Video & Picture Reference */}
+        {/* Left: Real Looping Video Motion Guide / Artwork */}
         <div
           style={{
             position: "relative",
             width: "100%",
-            height: "330px",
+            height: "350px",
             background: "#000",
             borderRadius: "20px",
             overflow: "hidden",
             border: isWork ? "2px solid var(--acc)" : isRest ? "2px solid var(--ok)" : "2px solid var(--warn)",
-            boxShadow: isWork ? "0 16px 48px rgba(255, 107, 44, 0.3)" : "0 14px 40px rgba(0, 0, 0, 0.7)"
+            boxShadow: isWork ? "0 16px 48px rgba(255, 107, 44, 0.35)" : "0 14px 40px rgba(0, 0, 0, 0.7)"
           }}
         >
-          <img
-            src={media.img}
-            alt={currentStep?.x}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              filter: "contrast(115%) brightness(92%)"
-            }}
-          />
+          {viewMode === "video" && media.video ? (
+            <video
+              ref={videoRef}
+              src={media.video}
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block"
+              }}
+            />
+          ) : (
+            <img
+              src={media.img}
+              alt={currentStep?.x}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+                filter: "contrast(115%) brightness(92%)"
+              }}
+            />
+          )}
 
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.88) 100%)"
+              background: "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 100%)",
+              pointerEvents: "none"
             }}
           />
 
-          {/* Phase Badge */}
+          {/* Top Controls on Video */}
           <div
             style={{
               position: "absolute",
-              top: "14px",
-              left: "14px",
-              background: isWork ? "var(--acc)" : isRest ? "var(--ok)" : "var(--warn)",
-              color: "#000",
-              padding: "6px 14px",
-              borderRadius: "99px",
-              fontSize: "11.5px",
-              fontWeight: "900",
-              letterSpacing: "0.08em",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.4)"
+              top: "12px",
+              left: "12px",
+              right: "12px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
             }}
           >
-            {isPrep ? "🟡 GET READY PHASE" : isWork ? "🔥 ACTIVE WORKOUT" : "🟢 REST & RECOVERY"}
+            <span
+              style={{
+                background: isWork ? "var(--acc)" : isRest ? "var(--ok)" : "var(--warn)",
+                color: "#000",
+                padding: "4px 12px",
+                borderRadius: "99px",
+                fontSize: "10.5px",
+                fontWeight: "900",
+                letterSpacing: "0.08em"
+              }}
+            >
+              {isPrep ? "🟡 GET READY" : isWork ? "🔥 WATCH & PERFORM" : "🟢 RESTING"}
+            </span>
+
+            <div style={{ display: "flex", gap: "4px", background: "rgba(0,0,0,0.7)", padding: "3px", borderRadius: "8px", backdropFilter: "blur(6px)" }}>
+              <button
+                className={`btn sm ${viewMode === "video" ? "" : "gh"}`}
+                style={{ padding: "3px 8px", fontSize: "10px" }}
+                onClick={() => setViewMode("video")}
+              >
+                🎬 Video Demo
+              </button>
+              <button
+                className={`btn sm ${viewMode === "artwork" ? "" : "gh"}`}
+                style={{ padding: "3px 8px", fontSize: "10px" }}
+                onClick={() => setViewMode("artwork")}
+              >
+                🎨 Artwork
+              </button>
+            </div>
           </div>
 
           <div
             style={{
               position: "absolute",
-              bottom: "14px",
-              left: "14px",
-              right: "14px",
+              bottom: "12px",
+              left: "12px",
+              right: "12px",
               background: "rgba(11, 13, 16, 0.94)",
               backdropFilter: "blur(10px)",
-              padding: "12px 16px",
-              borderRadius: "14px",
+              padding: "10px 14px",
+              borderRadius: "12px",
               border: "1px solid var(--ln)"
             }}
           >
-            <span className="cali-acc" style={{ fontSize: "10.5px" }}>
+            <span className="cali-acc" style={{ fontSize: "10px" }}>
               {isRest ? "UP NEXT" : "CURRENT EXERCISE"}
             </span>
-            <b style={{ color: "#fff", display: "block", fontSize: "18px", margin: "2px 0" }}>
+            <b style={{ color: "#fff", display: "block", fontSize: "17px", margin: "1px 0" }}>
               {currentStep?.x}
             </b>
-            <span className="mut sm" style={{ fontSize: "12px" }}>
+            <span className="mut sm" style={{ fontSize: "11.5px" }}>
               {currentStep?.set ? `Set ${currentStep.set} of ${currentStep.sets}` : "Prepare your space"}
             </span>
           </div>
         </div>
 
-        {/* Right: Unmissable Action Box & Live Controls */}
+        {/* Right: Step-by-Step Instructions & Interactive Counter */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
           {isDone ? (
             <div style={{ textAlign: "center", padding: "20px" }}>
@@ -390,7 +449,7 @@ export default function WorkoutPlayer() {
               </div>
             </div>
           ) : isPrep ? (
-            /* 10-Year-Old Simple: Prep Screen */
+            /* Prep Screen */
             <div
               style={{
                 width: "100%",
@@ -402,7 +461,7 @@ export default function WorkoutPlayer() {
               }}
             >
               <span className="pill" style={{ borderColor: "var(--warn)", color: "var(--warn)", marginBottom: "8px" }}>
-                ⏳ PREPARE YOUR POSITION
+                ⏳ PREPARE YOUR BODY
               </span>
               <h3 style={{ fontSize: "22px", margin: "8px 0" }}>
                 Starting in:
@@ -422,7 +481,7 @@ export default function WorkoutPlayer() {
               </button>
             </div>
           ) : isWork ? (
-            /* 10-Year-Old Simple: Active Workout Action HUD */
+            /* Active Workout HUD: 100% Clear & Step-By-Step */
             <div
               style={{
                 width: "100%",
@@ -434,82 +493,132 @@ export default function WorkoutPlayer() {
                 boxShadow: "0 14px 44px rgba(255, 107, 44, 0.25)"
               }}
             >
-              <span
+              {/* Step 1-2-3 Guide Banner */}
+              <div
                 style={{
-                  background: "var(--acc)",
-                  color: "#000",
-                  padding: "4px 12px",
-                  borderRadius: "99px",
-                  fontSize: "11px",
-                  fontWeight: "900",
-                  letterSpacing: "0.1em"
+                  background: "rgba(255, 107, 44, 0.12)",
+                  border: "1px solid var(--acc)",
+                  borderRadius: "10px",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  color: "#ffb38a",
+                  marginBottom: "12px",
+                  fontWeight: "600"
                 }}
               >
-                👉 DO THIS NOW
-              </span>
+                📌 <b>WHAT TO DO:</b> Watch the video demo on the left & do <b>{currentStep?.rep || 15} reps</b>. Tap below as you count!
+              </div>
 
               {/* Huge Action Title */}
-              <div style={{ margin: "12px 0 6px" }}>
+              <div style={{ margin: "4px 0 10px" }}>
                 {isManualRep ? (
                   <>
-                    <h2 style={{ fontSize: "clamp(28px, 6vw, 42px)", fontWeight: "900", color: "#fff", margin: 0 }}>
-                      PERFORM {currentStep?.rep} REPS
+                    <h2 style={{ fontSize: "clamp(26px, 5vw, 36px)", fontWeight: "900", color: "#fff", margin: 0 }}>
+                      DO {targetReps} REPS NOW
                     </h2>
-                    <span className="mut sm" style={{ fontSize: "13px" }}>
-                      Set {currentStep?.set} of {currentStep?.sets} · Count each rep cleanly
+                    <span className="mut sm" style={{ fontSize: "12.5px" }}>
+                      Set {currentStep?.set} of {currentStep?.sets} · Follow strict form
                     </span>
                   </>
                 ) : (
                   <>
-                    <h2 style={{ fontSize: "clamp(28px, 6vw, 38px)", fontWeight: "900", color: "#fff", margin: 0 }}>
+                    <h2 style={{ fontSize: "clamp(26px, 5vw, 36px)", fontWeight: "900", color: "#fff", margin: 0 }}>
                       HOLD POSITION
                     </h2>
-                    <div className="clk" style={{ color: "var(--acc)", fontSize: "64px", margin: "4px 0" }}>
+                    <div className="clk" style={{ color: "var(--acc)", fontSize: "60px", margin: "2px 0" }}>
                       {timer}s
                     </div>
                   </>
                 )}
               </div>
 
-              {/* 3 Clear Form Checklist Pointers */}
+              {/* Interactive Rep Counter Stepper */}
+              {isManualRep && (
+                <div
+                  style={{
+                    background: "rgba(11, 13, 16, 0.9)",
+                    border: "1px solid var(--ln)",
+                    borderRadius: "14px",
+                    padding: "14px",
+                    margin: "12px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "10px"
+                  }}
+                >
+                  <button
+                    className="btn gh"
+                    style={{ padding: "8px 16px", fontSize: "18px", fontWeight: "900" }}
+                    onClick={() => setRepsDone(Math.max(0, repsDone - 1))}
+                    title="Decrease Rep"
+                  >
+                    −
+                  </button>
+
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "32px", fontWeight: "900", color: repsDone >= targetReps ? "var(--ok)" : "var(--acc)" }}>
+                      {repsDone} <span style={{ fontSize: "18px", color: "var(--mut)" }}>/ {targetReps}</span>
+                    </div>
+                    <span className="mut sm" style={{ fontSize: "11px" }}>
+                      {repsDone === 0 ? "Tap '+' after each rep you do!" : repsDone >= targetReps ? "Target hit!" : `${targetReps - repsDone} reps to go`}
+                    </span>
+                  </div>
+
+                  <button
+                    className="btn"
+                    style={{ padding: "8px 20px", fontSize: "18px", fontWeight: "900" }}
+                    onClick={handleCountRep}
+                    title="Count 1 Rep"
+                  >
+                    + Tap Rep
+                  </button>
+                </div>
+              )}
+
+              {/* 3 Form Cues */}
               <div
                 style={{
                   textAlign: "left",
-                  background: "rgba(11, 13, 16, 0.85)",
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  margin: "14px 0 18px",
+                  background: "rgba(11, 13, 16, 0.75)",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  margin: "8px 0 14px",
                   border: "1px solid var(--ln)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "6px"
+                  gap: "4px"
                 }}
               >
-                {currentStep?.cues?.slice(0, 3).map((cue, idx) => (
-                  <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", fontSize: "13px" }}>
+                {currentStep?.cues?.slice(0, 2).map((cue, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: "8px", alignItems: "center", fontSize: "12px" }}>
                     <span style={{ color: "var(--ok)", fontWeight: "bold" }}>✔</span>
                     <span style={{ color: "var(--tx)" }}>{cue}</span>
                   </div>
                 ))}
               </div>
 
-              {/* One-Tap Big Green Action Button */}
+              {/* Big Action Button */}
               {isManualRep ? (
                 <button
                   className="btn"
                   style={{
                     width: "100%",
                     justifyContent: "center",
-                    padding: "16px 24px",
-                    fontSize: "16px",
+                    padding: "15px 20px",
+                    fontSize: "15.5px",
                     fontWeight: "900",
-                    background: "linear-gradient(135deg, #3ed598 0%, #20b275 100%)",
-                    color: "#0b0d10",
-                    boxShadow: "0 8px 28px rgba(62, 213, 152, 0.45)"
+                    background: repsDone >= targetReps
+                      ? "linear-gradient(135deg, #3ed598 0%, #20b275 100%)"
+                      : "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
+                    color: repsDone >= targetReps ? "#0b0d10" : "#fff",
+                    boxShadow: "0 8px 28px rgba(255, 107, 44, 0.4)"
                   }}
                   onClick={advanceStep}
                 >
-                  ✅ I FINISHED MY {currentStep?.rep} REPS → REST
+                  {repsDone >= targetReps
+                    ? `✅ TARGET MET! LOG SET & REST →`
+                    : `✅ I FINISHED ALL ${targetReps} REPS → REST`}
                 </button>
               ) : (
                 <button
@@ -517,12 +626,12 @@ export default function WorkoutPlayer() {
                   style={{ width: "100%", justifyContent: "center", padding: "12px" }}
                   onClick={advanceStep}
                 >
-                  ⏭ Finish Early & Rest
+                  ⏭ Finish Hold Early & Rest
                 </button>
               )}
             </div>
           ) : (
-            /* 10-Year-Old Simple: Rest & Recover Phase */
+            /* Rest Phase */
             <div
               style={{
                 width: "100%",
@@ -534,16 +643,16 @@ export default function WorkoutPlayer() {
               }}
             >
               <span className="pill" style={{ borderColor: "var(--ok)", color: "var(--ok)", marginBottom: "8px" }}>
-                ☕ REST & BREATHE
+                ☕ REST & RECOVER
               </span>
               <h3 style={{ fontSize: "20px", margin: "6px 0 2px" }}>
-                Rest Countdown
+                Take Deep Breaths
               </h3>
               <div className="clk" style={{ color: "var(--ok)", fontSize: "68px", margin: "4px 0" }}>
                 {timer}s
               </div>
               <p className="mut sm" style={{ marginBottom: "16px" }}>
-                Take deep breaths. Up next: <b>{currentStep?.x}</b> (Set {currentStep?.set} of {currentStep?.sets}).
+                Get ready for next set: <b>{currentStep?.x}</b> (Set {currentStep?.set} of {currentStep?.sets}).
               </p>
               <button
                 className="btn"
