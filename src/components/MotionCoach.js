@@ -526,6 +526,112 @@ const ANIM_CONFIGS = {
     }
   },
 
+  // NORDIC HAMSTRING CURL (Eccentric Knee Flexion)
+  nordic: {
+    name: "Nordic Hamstring Curl",
+    phases: ["Upright Kneeling Anchor", "Eccentric Lean (5s)", "Peak Hamstring Tension", "Soft Hand Touch & Push"],
+    cadence: "5-1-1-0",
+    checkpoints: [
+      { name: "Hips", desc: "Locked 180° (Zero Hinge)" },
+      { name: "Ankles", desc: "Firmly Anchored to Mat" },
+      { name: "Hamstrings", desc: "Controlled Eccentric Brake" }
+    ],
+    draw: (ctx, t, w, h) => {
+      const cx = w / 2;
+      const cy = h / 2 + 15;
+      const leanAngle = Math.sin(t * Math.PI) * (52 * Math.PI / 180);
+
+      // Floor & Mat
+      ctx.strokeStyle = "#232a33";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx - 140, cy + 45);
+      ctx.lineTo(cx + 140, cy + 45);
+      ctx.stroke();
+
+      ctx.fillStyle = "#1b2028";
+      ctx.fillRect(cx - 130, cy + 45, 260, 8);
+
+      const kneeX = cx - 25;
+      const kneeY = cy + 45;
+      const ankleX = kneeX - 65;
+      const ankleY = cy + 45;
+
+      // Ankle anchor strap (Orange)
+      ctx.fillStyle = "#ff6b2c";
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(ankleX - 14, ankleY - 14, 28, 14, 4);
+      } else {
+        ctx.rect(ankleX - 14, ankleY - 14, 28, 14);
+      }
+      ctx.fill();
+
+      // Shins
+      ctx.strokeStyle = "#8a939d";
+      ctx.lineWidth = 7;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(ankleX, ankleY - 5);
+      ctx.lineTo(kneeX, kneeY - 5);
+      ctx.stroke();
+
+      // Thigh & Torso
+      const thighLen = 65;
+      const torsoLen = 70;
+      const thighAngle = -Math.PI / 2 + leanAngle;
+
+      const hipX = kneeX + Math.cos(thighAngle) * thighLen;
+      const hipY = kneeY + Math.sin(thighAngle) * thighLen;
+      const shoulderX = hipX + Math.cos(thighAngle) * torsoLen;
+      const shoulderY = hipY + Math.sin(thighAngle) * torsoLen;
+      const headX = shoulderX + Math.cos(thighAngle) * 18;
+      const headY = shoulderY + Math.sin(thighAngle) * 18;
+
+      // Rigid body line (Knee -> Hip -> Shoulder)
+      ctx.strokeStyle = "#3ed598";
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(kneeX, kneeY - 5);
+      ctx.lineTo(hipX, hipY);
+      ctx.lineTo(shoulderX, shoulderY);
+      ctx.stroke();
+
+      // Arms ready to catch
+      const armReach = leanAngle / (52 * Math.PI / 180);
+      const handX = shoulderX + 25 + armReach * 20;
+      const handY = shoulderY + 30 + armReach * 25;
+
+      ctx.strokeStyle = "#ff6b2c";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(shoulderX, shoulderY);
+      ctx.lineTo(handX, handY);
+      ctx.stroke();
+
+      if (leanAngle > 0.7) {
+        ctx.fillStyle = "rgba(255, 107, 44, 0.4)";
+        ctx.beginPath();
+        ctx.arc(handX, cy + 45, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Head
+      ctx.fillStyle = "#e9edf1";
+      ctx.beginPath();
+      ctx.arc(headX, headY, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Real-time angle readout
+      const deg = Math.round(leanAngle * 180 / Math.PI);
+      ctx.fillStyle = "#ffb38a";
+      ctx.font = "bold 11px Inter";
+      ctx.fillText(`Knee Lean: ${deg}° (Max Eccentric)`, cx - 120, cy - 40);
+      ctx.fillText(`Hip Angle: 180° (Zero Hinge)`, cx - 120, cy - 24);
+    }
+  },
+
   // 8. FRONT LEVER
   flev: {
     name: "Front Lever",
@@ -669,7 +775,8 @@ export default function MotionCoach({ exerciseId, exerciseName }) {
     if (id === "hspu" || id === "pike" || id.includes("handstand") || id.includes("hstand")) return "hstand";
     if (id === "planche") return "planche";
     if (id === "frontlev" || id === "flev") return "flev";
-    if (id === "squat" || id === "squatbb" || id === "bulg" || id === "pistol" || id === "nordic" || id === "calf") return "squat";
+    if (id === "nordic") return "nordic";
+    if (id === "squat" || id === "squatbb" || id === "bulg" || id === "pistol" || id === "calf") return "squat";
     if (id === "lsit" || id === "legraise" || id === "rollout" || id === "hollow" || id === "plank" || id === "sidep") return "lsit";
     
     return "pushup";

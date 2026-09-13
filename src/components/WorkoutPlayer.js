@@ -41,7 +41,7 @@ const EXERCISE_MEDIA = {
   wrist: { img: "/illustrations/hstand.jpg", video: "/videos/wrist.mp4" },
   dloc: { img: "/illustrations/pullup.jpg", video: "/videos/dloc.mp4" },
   dog: { img: "/illustrations/hstand.jpg", video: "/videos/dog.mp4" },
-  nordic: { img: "/illustrations/lsit.jpg", video: "/videos/hollow.mp4" },
+  nordic: { img: "/illustrations/lsit.jpg", video: "/videos/nordic.mp4" },
   sprint: { img: "/illustrations/pistol.jpg", video: "/videos/burpee.mp4" },
   run: { img: "/illustrations/pistol.jpg", video: "/videos/rope.mp4" },
   shadow: { img: "/illustrations/pullup.jpg", video: "/videos/burpee.mp4" },

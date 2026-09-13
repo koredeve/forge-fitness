@@ -17,7 +17,15 @@ const TOON_IMAGES = {
 };
 
 export default function ExerciseModal({ exercise, onClose, onSelectExercise }) {
-  const [viewMode, setViewMode] = useState("video"); // "video", "motion", "toon"
+  const [viewMode, setViewMode] = useState(exercise?.id === "nordic" ? "motion" : "video"); // "video", "motion", "toon"
+
+  React.useEffect(() => {
+    if (exercise?.id === "nordic") {
+      setViewMode("motion");
+    } else {
+      setViewMode("video");
+    }
+  }, [exercise?.id]);
 
   if (!exercise) return null;
 

@@ -27,7 +27,7 @@ const LOCAL_VIDEOS = {
   squatbb: "/videos/squat.mp4",
   bulg: "/videos/bulg.mp4",
   pistol: "/videos/pistol.mp4",
-  nordic: "/videos/hollow.mp4",
+  nordic: "/videos/nordic.mp4",
   calf: "/videos/calf.mp4",
   bench: "/videos/bench.mp4",
   ohp: "/videos/ohp.mp4",
