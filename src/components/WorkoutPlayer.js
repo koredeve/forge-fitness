@@ -449,6 +449,20 @@ export default function WorkoutPlayer() {
               <div style={{ marginTop: "16px", fontSize: "18px", fontWeight: "800", color: "var(--acc)" }}>
                 ⭐ +{earnedXp + 50} XP Earned!
               </div>
+              <button
+                className="btn"
+                onClick={() => setActiveSession(null)}
+                style={{
+                  marginTop: "20px",
+                  padding: "12px 28px",
+                  fontSize: "14px",
+                  background: "linear-gradient(135deg, #3ed598 0%, #209968 100%)",
+                  color: "#000",
+                  fontWeight: "800"
+                }}
+              >
+                ✔ Done & Save Session
+              </button>
             </div>
           ) : isPrep ? (
             /* Prep Screen */

@@ -63,7 +63,7 @@ export function FitnessProvider({ children }) {
     }
   }, []);
 
-  // 2. Fetch from Firestore safely with offline fallback
+  // 2. Fetch from Firestore safely with smart bidirectional merge
   useEffect(() => {
     if (!user) return;
 
@@ -71,14 +71,57 @@ export function FitnessProvider({ children }) {
       try {
         const userRef = doc(db, "users", user.uid);
         const snap = await getDoc(userRef).catch(() => null);
+        const localLogs = JSON.parse(localStorage.getItem("forge.log") || "[]");
+        const localPrs = JSON.parse(localStorage.getItem("forge.pr") || "{}");
+        const localSkills = JSON.parse(localStorage.getItem("forge.skills") || "{}");
+
         if (snap && snap.exists()) {
           const data = snap.data();
-          if (data.logs) setLogs(data.logs);
-          if (data.prs) setPrs(data.prs);
-          if (data.skills) setSkills(data.skills);
+          const remoteLogs = data.logs || [];
+          
+          // Smart merge logs by id or unique signature
+          const map = new Map();
+          remoteLogs.forEach((l) => map.set(l.id || `${l.d}_${l.n}_${l.min}`, l));
+          localLogs.forEach((l) => {
+            const key = l.id || `${l.d}_${l.n}_${l.min}`;
+            if (!map.has(key)) map.set(key, l);
+          });
+          const mergedLogs = Array.from(map.values());
+          setLogs(mergedLogs);
+          localStorage.setItem("forge.log", JSON.stringify(mergedLogs));
+
+          // Merge PRs
+          const remotePrs = data.prs || {};
+          const mergedPrs = { ...localPrs, ...remotePrs };
+          setPrs(mergedPrs);
+          localStorage.setItem("forge.pr", JSON.stringify(mergedPrs));
+
+          // Merge skills
+          const remoteSkills = data.skills || {};
+          const mergedSkills = { ...localSkills, ...remoteSkills };
+          setSkills(mergedSkills);
+          localStorage.setItem("forge.skills", JSON.stringify(mergedSkills));
+
+          // Sync any newly merged items back to remote
+          if (mergedLogs.length > remoteLogs.length) {
+            await setDoc(
+              userRef,
+              { logs: mergedLogs, prs: mergedPrs, skills: mergedSkills, updatedAt: new Date().toISOString() },
+              { merge: true }
+            ).catch(() => {});
+          }
+        } else {
+          // If first sign-in on an account, upload existing local logs immediately
+          if (localLogs.length > 0 || Object.keys(localPrs).length > 0) {
+            await setDoc(
+              userRef,
+              { logs: localLogs, prs: localPrs, skills: localSkills, updatedAt: new Date().toISOString() },
+              { merge: true }
+            ).catch(() => {});
+          }
         }
       } catch (e) {
-        // Silently fallback to local storage
+        // Fall back gracefully to local storage
       }
     };
 
@@ -103,7 +146,9 @@ export function FitnessProvider({ children }) {
             updatedAt: new Date().toISOString()
           },
           { merge: true }
-        ).catch(() => {});
+        ).catch((err) => {
+          console.warn("Cloud sync deferred:", err);
+        });
       }
     } catch (e) {
       // Storage fallback
@@ -111,10 +156,21 @@ export function FitnessProvider({ children }) {
   };
 
   const addLog = async (entry) => {
-    const updated = [entry, ...logs];
-    setLogs(updated);
-    await persistData(updated, prs, skills);
-    showToast("Workout logged! 💪");
+    const logItem = {
+      id: entry.id || `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      d: entry.d || new Date().toISOString().slice(0, 10),
+      n: entry.n || "Training Session",
+      cat: entry.cat || "calis",
+      min: entry.min || 1,
+      createdAt: new Date().toISOString()
+    };
+
+    setLogs((prevLogs) => {
+      const updated = [logItem, ...prevLogs];
+      persistData(updated, prs, skills);
+      return updated;
+    });
+    showToast("Workout saved & synced! 💪");
   };
 
   const deleteLog = async (index) => {
