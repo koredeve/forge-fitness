@@ -136,14 +136,14 @@ export default function ExerciseVideoPlayer({ exerciseId, exerciseName, category
         </button>
       </div>
 
-      {/* Video Viewport */}
+      {/* Video Viewport (100% unobstructed hands and floor contact) */}
       <div
         style={{
           position: "relative",
           width: "100%",
-          height: "280px",
-          background: "#000",
-          borderRadius: "12px",
+          aspectRatio: "16 / 9",
+          background: "#080a0d",
+          borderRadius: "14px",
           overflow: "hidden",
           border: "1px solid var(--ln)",
           boxShadow: "0 8px 24px rgba(0,0,0,0.5)"
@@ -157,40 +157,40 @@ export default function ExerciseVideoPlayer({ exerciseId, exerciseName, category
           autoPlay
           playsInline
           onTimeUpdate={handleTimeUpdate}
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
         />
 
-        {/* Video HUD Overlays */}
+        {/* Video HUD Overlays - Top Only */}
         {showOverlay && (
           <>
             <div
               style={{
                 position: "absolute",
-                top: "14px",
-                left: "14px",
+                top: "10px",
+                left: "10px",
                 background: "rgba(11, 13, 16, 0.85)",
                 backdropFilter: "blur(8px)",
                 border: "1px solid rgba(255, 107, 44, 0.4)",
                 borderRadius: "8px",
-                padding: "6px 12px",
-                fontSize: "12px",
+                padding: "4px 10px",
+                fontSize: "11px",
                 zIndex: 10
               }}
             >
-              <span className="mut">Cadence Status: </span>
+              <span className="mut">Cadence: </span>
               <b style={{ color: "var(--ok)" }}>Full Rep Cycle</b>
             </div>
 
             <div
               style={{
                 position: "absolute",
-                top: "14px",
-                right: "14px",
+                top: "10px",
+                right: "10px",
                 background: "rgba(11, 13, 16, 0.85)",
                 backdropFilter: "blur(8px)",
                 border: "1px solid var(--ln)",
                 borderRadius: "8px",
-                padding: "6px 12px",
+                padding: "4px 10px",
                 fontSize: "11px",
                 color: "var(--acc)",
                 zIndex: 10
@@ -198,95 +198,87 @@ export default function ExerciseVideoPlayer({ exerciseId, exerciseName, category
             >
               📐 Target Angle: <b>90° - 180°</b>
             </div>
-
-            <div
-              style={{
-                position: "absolute",
-                bottom: "55px",
-                left: "14px",
-                display: "flex",
-                gap: "6px",
-                flexWrap: "wrap",
-                zIndex: 10
-              }}
-            >
-              <span className="pill" style={{ background: "rgba(0,0,0,0.75)", borderColor: "var(--ok)", color: "#fff" }}>
-                ✔ Zero Kip
-              </span>
-              <span className="pill" style={{ background: "rgba(0,0,0,0.75)", borderColor: "var(--ok)", color: "#fff" }}>
-                ✔ Full Range
-              </span>
-              <span className="pill" style={{ background: "rgba(0,0,0,0.75)", borderColor: "var(--acc)", color: "#fff" }}>
-                ⚡ Core Braced
-              </span>
-            </div>
           </>
         )}
+      </div>
 
-        {/* Video Scrubber & Play Bar */}
-        <div
+      {/* Form Cue Pills (Placed outside video so hands/floor are never blocked) */}
+      {showOverlay && (
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "8px" }}>
+          <span className="pill" style={{ background: "rgba(23, 28, 35, 0.8)", borderColor: "var(--ok)", color: "#fff", fontSize: "11px" }}>
+            ✔ Zero Kip
+          </span>
+          <span className="pill" style={{ background: "rgba(23, 28, 35, 0.8)", borderColor: "var(--ok)", color: "#fff", fontSize: "11px" }}>
+            ✔ Full Range
+          </span>
+          <span className="pill" style={{ background: "rgba(23, 28, 35, 0.8)", borderColor: "var(--acc)", color: "#fff", fontSize: "11px" }}>
+            ⚡ Core Braced
+          </span>
+        </div>
+      )}
+
+      {/* Dedicated Video Control Deck (Located below video frame) */}
+      <div
+        style={{
+          marginTop: "10px",
+          background: "rgba(18, 22, 27, 0.94)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid var(--ln)",
+          borderRadius: "12px",
+          padding: "10px 14px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px"
+        }}
+      >
+        <input
+          type="range"
+          min="0"
+          max={duration || 2}
+          step="0.01"
+          value={currentTime}
+          onChange={handleSeek}
           style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.95) 100%)",
-            padding: "12px 14px 10px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-            zIndex: 20
+            width: "100%",
+            accentColor: "var(--acc)",
+            height: "4px",
+            cursor: "pointer"
           }}
-        >
-          <input
-            type="range"
-            min="0"
-            max={duration || 2}
-            step="0.01"
-            value={currentTime}
-            onChange={handleSeek}
-            style={{
-              width: "100%",
-              accentColor: "var(--acc)",
-              height: "4px",
-              cursor: "pointer"
-            }}
-          />
+        />
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <button
-                className="btn sm"
-                style={{ padding: "4px 10px", fontSize: "12px" }}
-                onClick={handlePlayPause}
-              >
-                {isPlaying ? "⏸ Pause" : "▶ Play"}
-              </button>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <button
+              className="btn sm"
+              style={{ padding: "4px 10px", fontSize: "12px" }}
+              onClick={handlePlayPause}
+            >
+              {isPlaying ? "⏸ Pause" : "▶ Play"}
+            </button>
 
-              <div style={{ display: "flex", gap: "4px", background: "rgba(23, 28, 35, 0.8)", padding: "2px", borderRadius: "8px" }}>
-                {[0.25, 0.5, 1.0, 1.5].map((speed) => (
-                  <button
-                    key={speed}
-                    onClick={() => handleSpeedChange(speed)}
-                    style={{
-                      padding: "3px 7px",
-                      borderRadius: "6px",
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      background: playbackRate === speed ? "var(--acc)" : "transparent",
-                      color: playbackRate === speed ? "#fff" : "var(--mut)"
-                    }}
-                  >
-                    {speed === 0.25 ? "0.25x (Slow-Mo)" : `${speed}x`}
-                  </button>
-                ))}
-              </div>
+            <div style={{ display: "flex", gap: "4px", background: "rgba(23, 28, 35, 0.8)", padding: "2px", borderRadius: "8px" }}>
+              {[0.25, 0.5, 1.0, 1.5].map((speed) => (
+                <button
+                  key={speed}
+                  onClick={() => handleSpeedChange(speed)}
+                  style={{
+                    padding: "3px 7px",
+                    borderRadius: "6px",
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    background: playbackRate === speed ? "var(--acc)" : "transparent",
+                    color: playbackRate === speed ? "#fff" : "var(--mut)"
+                  }}
+                >
+                  {speed === 0.25 ? "0.25x (Slow-Mo)" : `${speed}x`}
+                </button>
+              ))}
             </div>
-
-            <span className="mut sm" style={{ fontSize: "11px" }}>
-              {currentTime.toFixed(1)}s / {duration ? duration.toFixed(1) : "2.0"}s
-            </span>
           </div>
+
+          <span className="mut sm" style={{ fontSize: "11px" }}>
+            {currentTime.toFixed(1)}s / {duration ? duration.toFixed(1) : "2.0"}s
+          </span>
         </div>
       </div>
 
