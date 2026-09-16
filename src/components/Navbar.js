@@ -16,7 +16,8 @@ export default function Navbar() {
     { href: "/library", label: "Library", icon: "📚" },
     { href: "/timer", label: "Timer", icon: "⏱" },
     { href: "/progress", label: "Progress", icon: "📈" },
-    { href: "/fuel", label: "Fuel", icon: "🍎" }
+    { href: "/fuel", label: "Fuel", icon: "🍎" },
+    { href: "/profile", label: "Profile", icon: "👤" }
   ];
 
   // Primary bottom tabs for mobile
@@ -24,8 +25,8 @@ export default function Navbar() {
     { href: "/", label: "Home", icon: "🏠" },
     { href: "/calis", label: "Skills", icon: "🤸" },
     { href: "/programs", label: "Programs", icon: "📋" },
-    { href: "/timer", label: "Timer", icon: "⏱" },
-    { href: "/progress", label: "Progress", icon: "📈" }
+    { href: "/progress", label: "Progress", icon: "📈" },
+    { href: "/profile", label: "Profile", icon: "👤" }
   ];
 
   return (
@@ -79,9 +80,26 @@ export default function Navbar() {
             <div className="desktop-user">
               {user ? (
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                  <span className="mut sm" style={{ maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {user.displayName || user.email?.split("@")[0]}
-                  </span>
+                  <Link
+                    href="/profile"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      textDecoration: "none",
+                      background: pathname === "/profile" ? "rgba(255, 107, 44, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                      border: pathname === "/profile" ? "1px solid var(--acc)" : "1px solid var(--ln)",
+                      padding: "4px 8px",
+                      borderRadius: "8px",
+                      transition: "all 0.2s"
+                    }}
+                    title="View Profile & Process"
+                  >
+                    <span style={{ fontSize: "12px" }}>👤</span>
+                    <span style={{ maxWidth: "90px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", color: "var(--tx)", fontWeight: "600" }}>
+                      {user.displayName?.split(" ")[0] || user.email?.split("@")[0]}
+                    </span>
+                  </Link>
                   <button
                     className="btn gh sm"
                     style={{ padding: "5px 10px", fontSize: "11px" }}
@@ -103,26 +121,28 @@ export default function Navbar() {
 
             {/* Mobile User Tag if logged in */}
             {user && (
-              <div
+              <Link
+                href="/profile"
                 className="mobile-user-tag"
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "5px",
-                  background: "rgba(62, 213, 152, 0.1)",
-                  border: "1px solid rgba(62, 213, 152, 0.3)",
+                  background: pathname === "/profile" ? "rgba(255, 107, 44, 0.2)" : "rgba(62, 213, 152, 0.1)",
+                  border: pathname === "/profile" ? "1px solid var(--acc)" : "1px solid rgba(62, 213, 152, 0.3)",
                   borderRadius: "20px",
                   padding: "4px 8px",
                   fontSize: "11px",
-                  color: "#3ed598",
-                  fontWeight: "600"
+                  color: pathname === "/profile" ? "var(--acc)" : "#3ed598",
+                  fontWeight: "600",
+                  textDecoration: "none"
                 }}
               >
-                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3ed598" }}></span>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: pathname === "/profile" ? "var(--acc)" : "#3ed598" }}></span>
                 <span style={{ maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user.displayName?.split(" ")[0] || user.email?.split("@")[0]}
                 </span>
-              </div>
+              </Link>
             )}
 
             {/* Mobile Hamburger Toggle Button */}
@@ -171,20 +191,38 @@ export default function Navbar() {
               }}
             >
               {user ? (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontSize: "11px", color: "var(--mut)", textTransform: "uppercase" }}>Logged In As</div>
-                    <b style={{ fontSize: "14px", color: "#fff" }}>{user.email}</b>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                    <div>
+                      <div style={{ fontSize: "11px", color: "var(--mut)", textTransform: "uppercase" }}>Logged In As</div>
+                      <b style={{ fontSize: "14px", color: "#fff" }}>{user.displayName || user.email}</b>
+                    </div>
+                    <button
+                      className="btn gh sm"
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Sign Out
+                    </button>
                   </div>
-                  <button
-                    className="btn gh sm"
-                    onClick={() => {
-                      logout();
-                      setMobileMenuOpen(false);
+                  <Link
+                    href="/profile"
+                    className="btn sm"
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      padding: "8px",
+                      fontSize: "12px",
+                      background: "rgba(255, 107, 44, 0.15)",
+                      border: "1px solid var(--acc)",
+                      color: "#ff944d"
                     }}
+                    onClick={() => setMobileMenuOpen(false)}
                   >
-                    Sign Out
-                  </button>
+                    👤 View Profile & Process Stats →
+                  </Link>
                 </div>
               ) : (
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

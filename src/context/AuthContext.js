@@ -11,10 +11,16 @@ import {
   getRedirectResult
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+
+const ADMIN_EMAILS = [
+  "kelightsub@gmail.com",
+  "kelight9@gmail.com"
+];
 
 const VIP_PRO_EMAILS = [
-  "kelightsub@gmail.com"
+  "kelightsub@gmail.com",
+  "kelight9@gmail.com"
 ];
 
 const AuthContext = createContext({});
@@ -25,6 +31,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isPro, setIsPro] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [proPassInfo, setProPassInfo] = useState(null);
 
   // Global Modals State
   const [authModalState, setAuthModalState] = useState({ isOpen: false, subtitle: "", defaultMode: "signin" });
@@ -34,6 +42,8 @@ export function AuthProvider({ children }) {
     if (!currentUser) {
       setUser(null);
       setIsPro(false);
+      setIsAdmin(false);
+      setProPassInfo(null);
       setLoading(false);
       return;
     }
@@ -41,31 +51,64 @@ export function AuthProvider({ children }) {
     setUser(currentUser);
     setLoading(false);
 
-    const emailLower = (currentUser.email || "").toLowerCase();
+    const emailLower = (currentUser.email || "").toLowerCase().trim();
     const isVip = VIP_PRO_EMAILS.includes(emailLower);
+    const userIsAdmin = ADMIN_EMAILS.includes(emailLower);
 
-    if (isVip) {
+    setIsAdmin(userIsAdmin);
+
+    if (isVip || userIsAdmin) {
       setIsPro(true);
     }
 
     try {
+      // 1. Check if user has an active time-limited or permanent pass in pro_passes
+      let passValid = false;
+      const passId = emailLower.replace(/[^a-z0-9_.-]/g, "_");
+      const passRef = doc(db, "pro_passes", passId);
+      const passSnap = await getDoc(passRef).catch(() => null);
+
+      if (passSnap && passSnap.exists()) {
+        const pData = passSnap.data();
+        if (pData.active !== false) {
+          if (!pData.expiresAt) {
+            // Permanent pass
+            passValid = true;
+            setProPassInfo({ ...pData, valid: true, permanent: true });
+          } else {
+            const expTime = new Date(pData.expiresAt).getTime();
+            if (expTime > Date.now()) {
+              passValid = true;
+              setProPassInfo({ ...pData, valid: true, remainingMs: expTime - Date.now() });
+            } else {
+              setProPassInfo({ ...pData, valid: false, expired: true });
+            }
+          }
+        } else {
+          setProPassInfo({ ...pData, valid: false, revoked: true });
+        }
+      }
+
+      // 2. Check user's own document
       const userRef = doc(db, "users", currentUser.uid);
       const docSnap = await getDoc(userRef).catch(() => null);
       if (docSnap && docSnap.exists()) {
         const data = docSnap.data();
-        setIsPro(isVip || data.plan === "pro");
-        if (isVip && data.plan !== "pro") {
+        const hasPro = isVip || userIsAdmin || passValid || data.plan === "pro";
+        setIsPro(hasPro);
+        if ((isVip || userIsAdmin || passValid) && data.plan !== "pro") {
           await setDoc(userRef, { plan: "pro" }, { merge: true }).catch(() => {});
         }
       } else {
         await setDoc(userRef, {
           email: currentUser.email,
           createdAt: new Date().toISOString(),
-          plan: isVip ? "pro" : "free"
+          plan: (isVip || userIsAdmin || passValid) ? "pro" : "free"
         }, { merge: true }).catch(() => {});
+        setIsPro(isVip || userIsAdmin || passValid);
       }
     } catch (e) {
-      if (isVip) setIsPro(true);
+      if (isVip || userIsAdmin) setIsPro(true);
     }
   };
 
@@ -162,12 +205,85 @@ export function AuthProvider({ children }) {
     setProModalState((prev) => ({ ...prev, isOpen: false }));
   };
 
+  // Grant a time-limited or permanent PRO pass by email (Admin only)
+  const grantProPass = async (recipientEmail, duration = "1week", note = "") => {
+    if (!isAdmin && !VIP_PRO_EMAILS.includes((user?.email || "").toLowerCase())) {
+      throw new Error("Unauthorized: Only creator/admin can grant PRO passes.");
+    }
+    const cleanEmail = recipientEmail.toLowerCase().trim();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      throw new Error("Please enter a valid email address.");
+    }
+
+    let expiresAt = null;
+    let durationLabel = "Permanent VIP";
+
+    if (duration === "1day") {
+      expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      durationLabel = "1 Day (24 Hours)";
+    } else if (duration === "1week") {
+      expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      durationLabel = "1 Week (7 Days)";
+    } else if (duration === "1month") {
+      expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      durationLabel = "1 Month (30 Days)";
+    }
+
+    const passId = cleanEmail.replace(/[^a-z0-9_.-]/g, "_");
+    const passRef = doc(db, "pro_passes", passId);
+
+    const passDoc = {
+      id: passId,
+      email: cleanEmail,
+      duration,
+      durationLabel,
+      expiresAt,
+      grantedAt: new Date().toISOString(),
+      grantedBy: user?.email || "Admin",
+      note: note.trim(),
+      active: true
+    };
+
+    await setDoc(passRef, passDoc);
+    return passDoc;
+  };
+
+  // Revoke an active PRO pass (Admin only)
+  const revokeProPass = async (passId) => {
+    if (!isAdmin && !VIP_PRO_EMAILS.includes((user?.email || "").toLowerCase())) {
+      throw new Error("Unauthorized: Only creator/admin can revoke PRO passes.");
+    }
+    const passRef = doc(db, "pro_passes", passId);
+    await updateDoc(passRef, { active: false, revokedAt: new Date().toISOString() });
+  };
+
+  // Fetch all granted passes for the Admin Dashboard
+  const fetchProPasses = async () => {
+    if (!isAdmin && !VIP_PRO_EMAILS.includes((user?.email || "").toLowerCase())) {
+      return [];
+    }
+    try {
+      const passesCol = collection(db, "pro_passes");
+      const snap = await getDocs(passesCol);
+      const list = [];
+      snap.forEach((d) => {
+        list.push({ id: d.id, ...d.data() });
+      });
+      return list.sort((a, b) => new Date(b.grantedAt || 0) - new Date(a.grantedAt || 0));
+    } catch (e) {
+      console.warn("fetchProPasses error:", e);
+      return [];
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         isPro,
+        isAdmin,
+        proPassInfo,
         setProPlan,
         login,
         signup,
@@ -178,7 +294,10 @@ export function AuthProvider({ children }) {
         closeAuthModal,
         proModalState,
         openProModal,
-        closeProModal
+        closeProModal,
+        grantProPass,
+        revokeProPass,
+        fetchProPasses
       }}
     >
       {children}
