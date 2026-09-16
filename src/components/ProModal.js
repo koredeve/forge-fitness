@@ -129,7 +129,7 @@ export default function ProModal({ isOpen, onClose, featureName }) {
                 </div>
               </div>
 
-              {/* 3-Day Free Trial Offer for Free Athletes */}
+              {/* 7-Day Free Trial Offer for Free Athletes */}
               {!isPro && !trialClaimed && (
                 <div
                   style={{
@@ -144,7 +144,7 @@ export default function ProModal({ isOpen, onClose, featureName }) {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                     <b style={{ color: "var(--acc)", fontSize: "13.5px", display: "flex", alignItems: "center", gap: "6px" }}>
                       <span>⚡</span>
-                      <span>3-Day Free Trial Available</span>
+                      <span>7-Day Free Trial Available</span>
                     </b>
                     <span
                       style={{
@@ -161,7 +161,7 @@ export default function ProModal({ isOpen, onClose, featureName }) {
                     </span>
                   </div>
                   <p className="mut sm" style={{ margin: "0 0 12px", fontSize: "12px", lineHeight: "1.4" }}>
-                    Experience every mastery tree, exercise video breakdown, and guided routine with 0 commitment.
+                    Experience every mastery tree, exercise video breakdown, and guided routine free for 7 full days with 0 commitment.
                   </p>
                   <button
                     className="btn"
@@ -178,7 +178,7 @@ export default function ProModal({ isOpen, onClose, featureName }) {
                     disabled={isClaimingTrial}
                     onClick={handleClaimTrial}
                   >
-                    {isClaimingTrial ? "Activating 3-Day Pass..." : "⚡ Start 3-Day Free Trial Now"}
+                    {isClaimingTrial ? "Activating 7-Day Pass..." : "⚡ Start 7-Day Free Trial Now"}
                   </button>
                 </div>
               )}

@@ -38,7 +38,7 @@ const FAQS = [
   },
   {
     q: "What is included in the FORGE PRO plan?",
-    a: "PRO unlocks all 7 master skill ladders (Planche, Muscle-Up, Front Lever, Handstand), all structured multi-week programs (Strength Builder & Hybrid Iron), cloud sync across devices, and personal record tracking."
+    a: "PRO unlocks all 8 master skill ladders (Planche, Muscle-Up, Front Lever, Handstand, Nordic Curl), all structured multi-week programs (Strength Builder & Hybrid Athlete), and cloud sync across devices. Every new athlete gets a full 7-day free trial automatically upon sign-up with no credit card required!"
   }
 ];
 
@@ -138,31 +138,33 @@ export default function Home() {
       {!user ? (
         <div
           style={{
-            background: "rgba(255, 107, 44, 0.08)",
-            border: "1px solid rgba(255, 107, 44, 0.35)",
-            borderRadius: "14px",
-            padding: "14px 18px",
+            background: "linear-gradient(135deg, rgba(255, 107, 44, 0.14) 0%, rgba(20, 24, 30, 0.85) 100%)",
+            border: "1.5px solid var(--acc)",
+            borderRadius: "16px",
+            padding: "16px 20px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
-            gap: "10px",
-            marginBottom: "20px"
+            gap: "12px",
+            marginBottom: "22px",
+            boxShadow: "0 8px 24px rgba(255, 107, 44, 0.15)"
           }}
         >
           <div>
-            <b style={{ color: "var(--acc)", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-              <span>🔐</span> You are browsing in Preview Mode
+            <b style={{ color: "var(--acc)", fontSize: "14.5px", display: "flex", alignItems: "center", gap: "6px" }}>
+              <span>⚡</span> 7-Day Free PRO Pass for New Athletes
             </b>
-            <span className="mut sm" style={{ display: "block", fontSize: "12px", marginTop: "2px" }}>
-              Sign in or create a free account to unlock full guided workouts, log sets, and save your progress to the cloud.
+            <span className="mut sm" style={{ display: "block", fontSize: "12.5px", marginTop: "3px" }}>
+              Sign up today to instantly unlock all 8 mastery ladders, 42 exercise video breakdowns, and guided routines. No card needed.
             </span>
           </div>
           <button
             className="btn sm"
-            onClick={() => openAuthModal("Sign in to save your streaks, track skill mastery, and unlock full workouts.")}
+            style={{ background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)", color: "#000", fontWeight: "900", padding: "8px 16px" }}
+            onClick={() => openAuthModal("Create your free account to claim your 7-day PRO trial pass!", "signup")}
           >
-            Sign In / Register →
+            ⚡ Start 7-Day Free Trial →
           </button>
         </div>
       ) : (

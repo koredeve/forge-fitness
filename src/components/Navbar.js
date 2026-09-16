@@ -65,7 +65,7 @@ export default function Navbar() {
                 }}
                 onClick={() => openProModal("All Master Calisthenics Trees & Roadmaps")}
               >
-                {!trialClaimed ? "⚡ 3-Day Trial" : "👑 Get PRO"}
+                {!trialClaimed ? "⚡ 7-Day Trial" : "👑 Get PRO"}
               </button>
             ) : (
               <span

@@ -105,12 +105,32 @@ export function AuthProvider({ children }) {
           await setDoc(userRef, { plan: "pro" }, { merge: true }).catch(() => {});
         }
       } else {
+        // BRAND NEW ATHLETE SIGNUP: Automatically grant full 7-Day PRO Free Trial!
+        const trialExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        const trialPass = {
+          id: passId,
+          email: emailLower,
+          duration: "7days",
+          durationLabel: "7-Day Free Trial",
+          expiresAt: trialExpires,
+          grantedAt: new Date().toISOString(),
+          grantedBy: "system_new_signup",
+          note: "Automatic 7-Day Free Trial for New Athlete",
+          active: true
+        };
+
+        await setDoc(passRef, trialPass).catch(() => {});
         await setDoc(userRef, {
           email: currentUser.email,
           createdAt: new Date().toISOString(),
-          plan: (isVip || userIsAdmin || passValid) ? "pro" : "free"
+          plan: "pro",
+          trialClaimed: true,
+          trialClaimedAt: new Date().toISOString()
         }, { merge: true }).catch(() => {});
-        setIsPro(isVip || userIsAdmin || passValid);
+
+        setTrialClaimed(true);
+        setIsPro(true);
+        setProPassInfo({ ...trialPass, valid: true, remainingMs: 7 * 24 * 60 * 60 * 1000 });
       }
     } catch (e) {
       if (isVip || userIsAdmin) setIsPro(true);
@@ -188,34 +208,34 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   };
 
-  // Self-service 3-Day Free Trial for new athletes
+  // Self-service 7-Day Free Trial for new athletes
   const claimFreeTrial = async () => {
     if (!user) {
-      openAuthModal("Sign up to activate your 3-day free trial!", "signup");
+      openAuthModal("Sign up to activate your 7-day free trial!", "signup");
       return;
     }
     if (trialClaimed) {
-      throw new Error("You have already claimed your 3-Day Free Trial.");
+      throw new Error("You have already claimed your 7-Day Free Trial.");
     }
     const cleanEmail = (user.email || "").toLowerCase().trim();
     if (!cleanEmail) {
       throw new Error("No email associated with this account.");
     }
 
-    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
-    const durationLabel = "3-Day Free Trial";
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const durationLabel = "7-Day Free Trial";
     const passId = cleanEmail.replace(/[^a-z0-9_.-]/g, "_");
     const passRef = doc(db, "pro_passes", passId);
 
     const passDoc = {
       id: passId,
       email: cleanEmail,
-      duration: "3days",
+      duration: "7days",
       durationLabel,
       expiresAt,
       grantedAt: new Date().toISOString(),
       grantedBy: "system_trial",
-      note: "Automatic 3-Day Free Trial",
+      note: "Automatic 7-Day Free Trial",
       active: true
     };
 
@@ -229,7 +249,7 @@ export function AuthProvider({ children }) {
 
     setTrialClaimed(true);
     setIsPro(true);
-    setProPassInfo({ ...passDoc, valid: true, remainingMs: 3 * 24 * 60 * 60 * 1000 });
+    setProPassInfo({ ...passDoc, valid: true, remainingMs: 7 * 24 * 60 * 60 * 1000 });
     return passDoc;
   };
 

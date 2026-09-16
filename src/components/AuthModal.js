@@ -163,6 +163,29 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
           </button>
         </div>
 
+        {isSignUp && (
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "10px 12px",
+              background: "linear-gradient(135deg, rgba(255, 107, 44, 0.16) 0%, rgba(30, 24, 18, 0.9) 100%)",
+              border: "1.5px solid var(--acc)",
+              borderRadius: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px"
+            }}
+          >
+            <span style={{ fontSize: "20px" }}>⚡</span>
+            <div style={{ fontSize: "11.5px", lineHeight: "1.35" }}>
+              <b style={{ color: "var(--acc)", display: "block" }}>Automatic 7-Day PRO Pass Included!</b>
+              <span className="mut sm" style={{ fontSize: "11px" }}>
+                Full instant access to all 8 skill trees, 42 video breakdowns & programs. No card required.
+              </span>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div
             style={{
