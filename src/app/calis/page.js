@@ -7,6 +7,7 @@ import SkillTreeVisual from "@/components/SkillTreeVisual";
 import WorkoutModal from "@/components/WorkoutModal";
 import ExerciseModal from "@/components/ExerciseModal";
 import AuthGate from "@/components/AuthGate";
+import { haptics } from "@/lib/haptics";
 
 // Free tier access list (Pull-Up & Dip up to Lv2)
 const FREE_SKILLS = ["pullup", "dip"];
@@ -40,9 +41,11 @@ export default function Calis() {
   const handleLevelClick = (skillId, levelIdx, skillName) => {
     const isLevelLocked = !isPro && (!FREE_SKILLS.includes(skillId) || levelIdx >= 2);
     if (isLevelLocked) {
+      haptics.countdown();
       openProModal(`${skillName} (Level ${levelIdx + 1})`);
       return;
     }
+    haptics.medium();
     toggleSkill(skillId, levelIdx);
   };
 

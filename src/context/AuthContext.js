@@ -33,6 +33,7 @@ export function AuthProvider({ children }) {
   const [isPro, setIsPro] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [proPassInfo, setProPassInfo] = useState(null);
+  const [trialClaimed, setTrialClaimed] = useState(false);
 
   // Global Modals State
   const [authModalState, setAuthModalState] = useState({ isOpen: false, subtitle: "", defaultMode: "signin" });
@@ -44,6 +45,7 @@ export function AuthProvider({ children }) {
       setIsPro(false);
       setIsAdmin(false);
       setProPassInfo(null);
+      setTrialClaimed(false);
       setLoading(false);
       return;
     }
@@ -94,6 +96,9 @@ export function AuthProvider({ children }) {
       const docSnap = await getDoc(userRef).catch(() => null);
       if (docSnap && docSnap.exists()) {
         const data = docSnap.data();
+        if (data.trialClaimed) {
+          setTrialClaimed(true);
+        }
         const hasPro = isVip || userIsAdmin || passValid || data.plan === "pro";
         setIsPro(hasPro);
         if ((isVip || userIsAdmin || passValid) && data.plan !== "pro") {
@@ -178,7 +183,54 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setIsPro(false);
+    setTrialClaimed(false);
+    setProPassInfo(null);
     return signOut(auth);
+  };
+
+  // Self-service 3-Day Free Trial for new athletes
+  const claimFreeTrial = async () => {
+    if (!user) {
+      openAuthModal("Sign up to activate your 3-day free trial!", "signup");
+      return;
+    }
+    if (trialClaimed) {
+      throw new Error("You have already claimed your 3-Day Free Trial.");
+    }
+    const cleanEmail = (user.email || "").toLowerCase().trim();
+    if (!cleanEmail) {
+      throw new Error("No email associated with this account.");
+    }
+
+    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    const durationLabel = "3-Day Free Trial";
+    const passId = cleanEmail.replace(/[^a-z0-9_.-]/g, "_");
+    const passRef = doc(db, "pro_passes", passId);
+
+    const passDoc = {
+      id: passId,
+      email: cleanEmail,
+      duration: "3days",
+      durationLabel,
+      expiresAt,
+      grantedAt: new Date().toISOString(),
+      grantedBy: "system_trial",
+      note: "Automatic 3-Day Free Trial",
+      active: true
+    };
+
+    await setDoc(passRef, passDoc);
+    const userRef = doc(db, "users", user.uid);
+    await setDoc(userRef, {
+      plan: "pro",
+      trialClaimed: true,
+      trialClaimedAt: new Date().toISOString()
+    }, { merge: true });
+
+    setTrialClaimed(true);
+    setIsPro(true);
+    setProPassInfo({ ...passDoc, valid: true, remainingMs: 3 * 24 * 60 * 60 * 1000 });
+    return passDoc;
   };
 
   const setProPlan = async (status = true) => {
@@ -297,7 +349,9 @@ export function AuthProvider({ children }) {
         closeProModal,
         grantProPass,
         revokeProPass,
-        fetchProPasses
+        fetchProPasses,
+        trialClaimed,
+        claimFreeTrial
       }}
     >
       {children}

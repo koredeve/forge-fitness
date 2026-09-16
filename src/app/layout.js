@@ -2,6 +2,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import WorkoutPlayer from "@/components/WorkoutPlayer";
 import GlobalModals from "@/components/GlobalModals";
+import CoachAssistant from "@/components/CoachAssistant";
 import { AuthProvider } from "@/context/AuthContext";
 import { FitnessProvider } from "@/context/FitnessContext";
 import { Inter, Archivo } from "next/font/google";
@@ -81,6 +82,7 @@ export default function RootLayout({ children }) {
             <Navbar />
             <main>{children}</main>
             <WorkoutPlayer />
+            <CoachAssistant />
             <GlobalModals />
           </FitnessProvider>
         </AuthProvider>

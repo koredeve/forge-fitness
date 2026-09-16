@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, logout, isPro, openAuthModal, openProModal } = useAuth();
+  const { user, logout, isPro, trialClaimed, openAuthModal, openProModal } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const mainLinks = [
@@ -65,7 +65,7 @@ export default function Navbar() {
                 }}
                 onClick={() => openProModal("All Master Calisthenics Trees & Roadmaps")}
               >
-                👑 Get PRO
+                {!trialClaimed ? "⚡ 3-Day Trial" : "👑 Get PRO"}
               </button>
             ) : (
               <span

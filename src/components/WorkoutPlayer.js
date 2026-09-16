@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useFitness } from "@/context/FitnessContext";
 import { EXDB, SKILLS, EXERCISE_SKILL_MAP } from "@/data/db";
+import { haptics } from "@/lib/haptics";
+import FlexCardModal from "@/components/FlexCardModal";
 
 // Video and image media definitions
 const EXERCISE_MEDIA = {
@@ -49,12 +51,13 @@ const EXERCISE_MEDIA = {
 };
 
 export default function WorkoutPlayer() {
-  const { activeSession, setActiveSession, playBeep, addLog, skills, advanceSkill } = useFitness();
+  const { activeSession, setActiveSession, playBeep, addLog, skills, advanceSkill, getStreak, getSkillsPct } = useFitness();
 
   const [stepIdx, setStepIdx] = useState(0);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const [isDone, setIsDone] = useState(false);
+  const [showFlexCard, setShowFlexCard] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [viewMode, setViewMode] = useState("video"); // 'video' | 'artwork'
@@ -181,6 +184,7 @@ export default function WorkoutPlayer() {
       setTimer(st.t || 0);
 
       if (st.p === "WORK") {
+        haptics.medium();
         playBeep(880, 0.25);
         if (st.rep) {
           speakVoice(`Set ${st.set}. Do ${st.rep} reps of ${st.x}. Tap the green button when finished.`);
@@ -188,6 +192,7 @@ export default function WorkoutPlayer() {
           speakVoice(`Set ${st.set}. Hold ${st.x} for ${st.t} seconds.`);
         }
       } else if (st.p === "REST") {
+        haptics.light();
         playBeep(520, 0.25);
         speakVoice(`Set complete! Take a rest for ${st.t} seconds.`);
       }
@@ -196,6 +201,7 @@ export default function WorkoutPlayer() {
 
   const finishWorkout = () => {
     setIsDone(true);
+    haptics.success();
     clearInterval(intervalRef.current);
     const mins = Math.max(1, Math.round((Date.now() - startTime) / 60000));
     addLog({
@@ -221,6 +227,7 @@ export default function WorkoutPlayer() {
         if (prev > 0) {
           if (prev <= 3 && prev >= 1) {
             playBeep(700, 0.08);
+            haptics.countdown();
           }
           if (prev === 1) {
             advanceStep();
@@ -556,22 +563,39 @@ export default function WorkoutPlayer() {
                 </div>
               )}
 
-              <button
-                className="btn"
-                onClick={() => setActiveSession(null)}
-                style={{
-                  marginTop: "18px",
-                  width: "100%",
-                  justifyContent: "center",
-                  padding: "12px 24px",
-                  fontSize: "14.5px",
-                  background: "linear-gradient(135deg, #3ed598 0%, #209968 100%)",
-                  color: "#000",
-                  fontWeight: "800"
-                }}
-              >
-                ✔ Done & Save Session
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "18px", width: "100%" }}>
+                <button
+                  className="btn"
+                  onClick={() => setShowFlexCard(true)}
+                  style={{
+                    width: "100%",
+                    justifyContent: "center",
+                    padding: "12px 20px",
+                    fontSize: "14px",
+                    background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
+                    fontWeight: "800",
+                    boxShadow: "0 4px 18px rgba(255, 107, 44, 0.35)"
+                  }}
+                >
+                  📸 Share Flex Card (Story / WhatsApp)
+                </button>
+
+                <button
+                  className="btn"
+                  onClick={() => setActiveSession(null)}
+                  style={{
+                    width: "100%",
+                    justifyContent: "center",
+                    padding: "12px 24px",
+                    fontSize: "14px",
+                    background: "linear-gradient(135deg, #3ed598 0%, #209968 100%)",
+                    color: "#000",
+                    fontWeight: "800"
+                  }}
+                >
+                  ✔ Done & Save Session
+                </button>
+              </div>
             </div>
           ) : isPrep ? (
             /* Prep Screen */
@@ -770,6 +794,19 @@ export default function WorkoutPlayer() {
           </div>
         </div>
       )}
+
+      {/* Viral Flex Card Modal */}
+      <FlexCardModal
+        isOpen={showFlexCard}
+        onClose={() => setShowFlexCard(false)}
+        data={{
+          title: activeSession?.n || "Training Session",
+          streak: getStreak ? getStreak() : 1,
+          mins: Math.max(1, Math.round((Date.now() - startTime) / 60000)),
+          xp: earnedXp + 50,
+          masteryPct: getSkillsPct ? getSkillsPct() : 25
+        }}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ export function FitnessProvider({ children }) {
   const [logs, setLogs] = useState([]);
   const [prs, setPrs] = useState({});
   const [skills, setSkills] = useState({});
+  const [customRoutines, setCustomRoutines] = useState([]);
   const [sound, setSound] = useState(true);
   const [activeSession, setActiveSession] = useState(null);
   const [toastMsg, setToastMsg] = useState("");
@@ -59,11 +60,15 @@ export function FitnessProvider({ children }) {
   // 2. Fetch from Firestore and user-scoped storage safely
   useEffect(() => {
     if (!user) {
-      // Logged out / guest preview mode: reset all in-memory user data
+      // Logged out / guest preview mode: reset logs, prs, skills, but allow local guest routines
       setLogs([]);
       setPrs({});
       setSkills({});
       setActiveSession(null);
+      try {
+        const guestRoutines = JSON.parse(localStorage.getItem("forge.custom_routines_guest") || "[]");
+        setCustomRoutines(guestRoutines);
+      } catch (e) {}
       // Clean legacy un-scoped test logs from localStorage to prevent guest preview leakage
       try {
         localStorage.removeItem("forge.log");
@@ -79,9 +84,11 @@ export function FitnessProvider({ children }) {
       const localLogs = JSON.parse(localStorage.getItem(`forge.log_${uid}`) || "[]");
       const localPrs = JSON.parse(localStorage.getItem(`forge.pr_${uid}`) || "{}");
       const localSkills = JSON.parse(localStorage.getItem(`forge.skills_${uid}`) || "{}");
+      const localRoutines = JSON.parse(localStorage.getItem(`forge.custom_routines_${uid}`) || "[]");
       setLogs(localLogs);
       setPrs(localPrs);
       setSkills(localSkills);
+      setCustomRoutines(localRoutines);
     } catch (e) {}
 
     const fetchFirestoreData = async () => {
@@ -94,14 +101,21 @@ export function FitnessProvider({ children }) {
           const remoteLogs = data.logs || [];
           const remotePrs = data.prs || {};
           const remoteSkills = data.skills || {};
+          const remoteRoutines = data.customRoutines || [];
 
           setLogs(remoteLogs);
           setPrs(remotePrs);
           setSkills(remoteSkills);
+          if (remoteRoutines.length > 0) {
+            setCustomRoutines(remoteRoutines);
+          }
 
           localStorage.setItem(`forge.log_${uid}`, JSON.stringify(remoteLogs));
           localStorage.setItem(`forge.pr_${uid}`, JSON.stringify(remotePrs));
           localStorage.setItem(`forge.skills_${uid}`, JSON.stringify(remoteSkills));
+          if (remoteRoutines.length > 0) {
+            localStorage.setItem(`forge.custom_routines_${uid}`, JSON.stringify(remoteRoutines));
+          }
         }
       } catch (e) {
         // Fall back gracefully to local storage
@@ -267,8 +281,67 @@ export function FitnessProvider({ children }) {
     return total ? Math.round((done / total) * 100) : 0;
   };
 
-  const startWorkout = (workoutId) => {
-    const w = WORKOUTS.find((item) => item.id === workoutId);
+  const saveCustomRoutine = async (routine) => {
+    const routineItem = {
+      id: routine.id || `custom_${Date.now()}`,
+      n: routine.n || "My Custom Routine",
+      cat: routine.cat || "calis",
+      lv: routine.lv || 2,
+      mins: routine.mins || Math.max(10, (routine.ex || []).length * 6),
+      tag: routine.tag || `Custom · ${(routine.ex || []).length} Exercises`,
+      isCustom: true,
+      ex: routine.ex || [],
+      createdAt: routine.createdAt || new Date().toISOString()
+    };
+
+    const updated = [routineItem, ...customRoutines.filter((r) => r.id !== routineItem.id)];
+    setCustomRoutines(updated);
+
+    if (user) {
+      const uid = user.uid;
+      try {
+        localStorage.setItem(`forge.custom_routines_${uid}`, JSON.stringify(updated));
+        const userRef = doc(db, "users", uid);
+        await setDoc(userRef, { customRoutines: updated }, { merge: true }).catch(() => {});
+      } catch (e) {}
+    } else {
+      try {
+        localStorage.setItem("forge.custom_routines_guest", JSON.stringify(updated));
+      } catch (e) {}
+    }
+
+    showToast(`Routine "${routineItem.n}" saved! ⚡`);
+    return routineItem;
+  };
+
+  const deleteCustomRoutine = async (routineId) => {
+    const updated = customRoutines.filter((r) => r.id !== routineId);
+    setCustomRoutines(updated);
+
+    if (user) {
+      const uid = user.uid;
+      try {
+        localStorage.setItem(`forge.custom_routines_${uid}`, JSON.stringify(updated));
+        const userRef = doc(db, "users", uid);
+        await setDoc(userRef, { customRoutines: updated }, { merge: true }).catch(() => {});
+      } catch (e) {}
+    } else {
+      try {
+        localStorage.setItem("forge.custom_routines_guest", JSON.stringify(updated));
+      } catch (e) {}
+    }
+
+    showToast("Custom routine deleted.");
+  };
+
+  const startWorkout = (workoutOrId) => {
+    let w = null;
+    if (typeof workoutOrId === "object" && workoutOrId !== null) {
+      w = workoutOrId;
+    } else {
+      w = WORKOUTS.find((item) => item.id === workoutOrId) ||
+          customRoutines.find((item) => item.id === workoutOrId);
+    }
     if (!w) return;
     setActiveSession(w);
   };
@@ -279,6 +352,9 @@ export function FitnessProvider({ children }) {
         logs,
         prs,
         skills,
+        customRoutines,
+        saveCustomRoutine,
+        deleteCustomRoutine,
         sound,
         setSound: (val) => {
           setSound(val);

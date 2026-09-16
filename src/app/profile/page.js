@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFitness } from "@/context/FitnessContext";
 import { SKILLS, TESTS, CATS } from "@/data/db";
 import AuthGate from "@/components/AuthGate";
+import FlexCardModal from "@/components/FlexCardModal";
 import Link from "next/link";
 
 export default function ProfilePage() {
@@ -20,6 +21,8 @@ export default function ProfilePage() {
   } = useAuth();
 
   const { logs, prs, skills, getStreak, getSkillsPct, showToast } = useFitness();
+
+  const [showFlexCard, setShowFlexCard] = useState(false);
 
   // Admin Access Pass Form State
   const [grantEmail, setGrantEmail] = useState("");
@@ -201,6 +204,13 @@ export default function ProfilePage() {
             </div>
 
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <button 
+                className="btn gh sm" 
+                style={{ fontSize: "12px", border: "1px solid var(--acc)", color: "var(--acc)", display: "flex", alignItems: "center", gap: "6px" }}
+                onClick={() => setShowFlexCard(true)}
+              >
+                📸 <span>Share Flex Card</span>
+              </button>
               {!isPro && !isAdmin && (
                 <button 
                   className="btn sm"
@@ -511,6 +521,20 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Viral Flex Card Modal */}
+        <FlexCardModal
+          isOpen={showFlexCard}
+          onClose={() => setShowFlexCard(false)}
+          data={{
+            title: "Overall Athlete Process",
+            streak,
+            mins: totalMins,
+            xp: logs.reduce((acc, s) => acc + (s.xp || 50), 0) || 120,
+            masteryPct,
+            athleteName: displayName
+          }}
+        />
       </div>
     </AuthGate>
   );

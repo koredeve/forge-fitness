@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useFitness } from "@/context/FitnessContext";
+import { haptics } from "@/lib/haptics";
 import AuthGate from "@/components/AuthGate";
 
 export default function Timer() {
@@ -22,6 +23,7 @@ export default function Timer() {
   const strokeDashoffset = 628 * (1 - (timeLeft / (curPhase === "WORK" ? workSec : restSec || 1)));
 
   const startTimer = () => {
+    haptics.medium();
     setCurPhase("WORK");
     setCurRound(1);
     setTimeLeft(workSec);
@@ -49,22 +51,26 @@ export default function Timer() {
         setTimeLeft((prev) => {
           if (prev <= 4 && prev > 1) {
             playBeep(660, 0.08);
+            haptics.countdown();
           }
           if (prev <= 1) {
             if (curPhase === "WORK") {
               if (curRound >= rounds) {
                 setCurPhase("DONE");
+                haptics.success();
                 playBeep(1200, 0.4);
                 clearInterval(intervalRef.current);
                 return 0;
               } else {
                 setCurPhase("REST");
+                haptics.light();
                 playBeep(440, 0.25);
                 return restSec;
               }
             } else {
               setCurRound((r) => r + 1);
               setCurPhase("WORK");
+              haptics.medium();
               playBeep(880, 0.25);
               return workSec;
             }

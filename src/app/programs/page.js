@@ -4,6 +4,7 @@ import { PROGRAMS, WORKOUTS, CATS } from "@/data/db";
 import { useFitness } from "@/context/FitnessContext";
 import { useAuth } from "@/context/AuthContext";
 import WorkoutModal from "@/components/WorkoutModal";
+import CustomRoutineBuilderModal from "@/components/CustomRoutineBuilderModal";
 import AuthGate from "@/components/AuthGate";
 
 const PROGRAM_BANNERS = {
@@ -16,9 +17,11 @@ const PROGRAM_BANNERS = {
 const FREE_PROGRAMS = ["p1"];
 
 export default function Programs() {
-  const { startWorkout } = useFitness();
+  const { startWorkout, customRoutines = [], deleteCustomRoutine } = useFitness();
   const { isPro, openProModal } = useAuth();
   const [selectedWorkout, setSelectedWorkout] = useState(null);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState(null);
 
   const handleProgramAction = (pId, pName, wId) => {
     const isLocked = !isPro && !FREE_PROGRAMS.includes(pId);
@@ -54,20 +57,42 @@ export default function Programs() {
             </p>
           </div>
 
-          {!isPro && (
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <button
-              className="btn"
+              className="btn gh"
               style={{
-                background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
-                boxShadow: "0 6px 20px rgba(255, 107, 44, 0.35)",
-                padding: "10px 18px",
+                borderColor: "var(--acc)",
+                color: "var(--acc)",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "10px 16px",
                 fontSize: "13px"
               }}
-              onClick={() => openProModal("All Advanced Workout Programs")}
+              onClick={() => {
+                setEditingRoutine(null);
+                setBuilderOpen(true);
+              }}
             >
-              👑 Unlock All Programs with PRO
+              <span>🛠️</span>
+              <span>+ Build Custom Routine</span>
             </button>
-          )}
+
+            {!isPro && (
+              <button
+                className="btn"
+                style={{
+                  background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
+                  boxShadow: "0 6px 20px rgba(255, 107, 44, 0.35)",
+                  padding: "10px 18px",
+                  fontSize: "13px"
+                }}
+                onClick={() => openProModal("All Advanced Workout Programs")}
+              >
+                👑 Unlock All Programs with PRO
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid g2">
@@ -175,9 +200,141 @@ export default function Programs() {
           })}
         </div>
 
+        {/* Custom Athlete Routines Section */}
+        <div style={{ marginTop: "40px", marginBottom: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "16px" }}>
+            <div>
+              <h2 style={{ fontSize: "22px", margin: 0, fontWeight: "900" }}>Custom Athlete Routines</h2>
+              <span className="mut sm">Personalized splits configured by you · Run with guided video & haptics</span>
+            </div>
+            <button
+              className="btn sm"
+              style={{ background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)", color: "#000", fontWeight: "900", fontSize: "12.5px" }}
+              onClick={() => {
+                setEditingRoutine(null);
+                setBuilderOpen(true);
+              }}
+            >
+              + Create Routine
+            </button>
+          </div>
+
+          {customRoutines.length === 0 ? (
+            <div
+              className="card"
+              style={{
+                textAlign: "center",
+                padding: "36px 20px",
+                border: "2px dashed var(--ln)",
+                background: "rgba(255, 255, 255, 0.02)"
+              }}
+            >
+              <div style={{ fontSize: "38px", marginBottom: "10px" }}>🛠️</div>
+              <h3 style={{ fontSize: "19px", margin: "0 0 6px" }}>Build Your Signature Workout</h3>
+              <p className="mut sm" style={{ maxWidth: "440px", margin: "0 auto 18px", fontSize: "13px" }}>
+                Combine any of the 42 exercises in the FORGE library, dial in your sets, reps, or hold seconds, and launch in the real-time guided player.
+              </p>
+              <button
+                className="btn sm"
+                style={{ background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)", color: "#000", fontWeight: "900" }}
+                onClick={() => {
+                  setEditingRoutine(null);
+                  setBuilderOpen(true);
+                }}
+              >
+                ⚡ Build My First Routine
+              </button>
+            </div>
+          ) : (
+            <div className="grid g3">
+              {customRoutines.map((routine) => (
+                <div
+                  key={routine.id}
+                  className="card"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    padding: "18px",
+                    border: "1px solid var(--ln)",
+                    background: "rgba(18, 22, 27, 0.9)"
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <span className="pill" style={{ borderColor: "var(--acc)", color: "var(--acc)", fontSize: "10px" }}>
+                        CUSTOM · {routine.ex?.length || 0} EXERCISES
+                      </span>
+                      <span className={`pill lv${routine.lv || 2}`}>L{routine.lv || 2}</span>
+                    </div>
+                    <b style={{ fontSize: "18px", display: "block", marginBottom: "4px" }}>{routine.n}</b>
+                    <span className="mut sm" style={{ fontSize: "12px" }}>~{routine.mins} min duration</span>
+
+                    {/* Preview of first 3 exercises */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", margin: "14px 0" }}>
+                      {(routine.ex || []).slice(0, 3).map((e, idx) => (
+                        <span key={idx} className="chip" style={{ fontSize: "11px", padding: "3px 8px" }}>
+                          {e.x} ×{e.s}
+                        </span>
+                      ))}
+                      {(routine.ex || []).length > 3 && (
+                        <span className="chip" style={{ fontSize: "11px", padding: "3px 8px", background: "transparent", border: "1px dashed var(--ln)" }}>
+                          +{routine.ex.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "8px", marginTop: "14px", paddingTop: "12px", borderTop: "1px solid var(--ln)" }}>
+                    <button
+                      className="btn sm"
+                      style={{ flex: 1, justifyContent: "center", background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)", color: "#000", fontWeight: "900" }}
+                      onClick={() => startWorkout(routine)}
+                    >
+                      ▶ Start Session
+                    </button>
+                    <button
+                      className="btn gh sm"
+                      style={{ padding: "6px 10px" }}
+                      onClick={() => {
+                        setEditingRoutine(routine);
+                        setBuilderOpen(true);
+                      }}
+                      title="Edit Routine"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      className="btn gh sm"
+                      style={{ padding: "6px 10px", color: "#ff4d4d" }}
+                      onClick={() => {
+                        if (confirm(`Delete routine "${routine.n}"?`)) {
+                          deleteCustomRoutine(routine.id);
+                        }
+                      }}
+                      title="Delete Routine"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <WorkoutModal
           workout={selectedWorkout}
           onClose={() => setSelectedWorkout(null)}
+        />
+
+        <CustomRoutineBuilderModal
+          isOpen={builderOpen}
+          onClose={() => {
+            setBuilderOpen(false);
+            setEditingRoutine(null);
+          }}
+          initialRoutine={editingRoutine}
         />
       </div>
     </AuthGate>

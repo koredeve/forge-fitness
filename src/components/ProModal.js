@@ -4,12 +4,33 @@ import { useAuth } from "@/context/AuthContext";
 import AuthModal from "./AuthModal";
 
 export default function ProModal({ isOpen, onClose, featureName }) {
-  const { user, isPro, setProPlan } = useAuth();
+  const { user, isPro, setProPlan, trialClaimed, claimFreeTrial } = useAuth();
   const [selectedTier, setSelectedTier] = useState("annual"); // 'annual' | 'monthly'
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isClaimingTrial, setIsClaimingTrial] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleClaimTrial = async () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    setIsClaimingTrial(true);
+    try {
+      await claimFreeTrial();
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        onClose();
+      }, 1800);
+    } catch (err) {
+      alert(err.message || "Could not activate free trial");
+    } finally {
+      setIsClaimingTrial(false);
+    }
+  };
 
   const handleUpgrade = async () => {
     if (!user) {
@@ -107,6 +128,60 @@ export default function ProModal({ isOpen, onClose, featureName }) {
                   <span>Personal Record Max Testing Analytics</span>
                 </div>
               </div>
+
+              {/* 3-Day Free Trial Offer for Free Athletes */}
+              {!isPro && !trialClaimed && (
+                <div
+                  style={{
+                    marginBottom: "18px",
+                    padding: "14px",
+                    background: "linear-gradient(135deg, rgba(255, 107, 44, 0.16) 0%, rgba(22, 26, 32, 0.95) 100%)",
+                    border: "1.5px solid var(--acc)",
+                    borderRadius: "14px",
+                    textAlign: "left"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <b style={{ color: "var(--acc)", fontSize: "13.5px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span>⚡</span>
+                      <span>3-Day Free Trial Available</span>
+                    </b>
+                    <span
+                      style={{
+                        background: "var(--acc)",
+                        color: "#000",
+                        fontSize: "9px",
+                        fontWeight: "900",
+                        padding: "2px 8px",
+                        borderRadius: "99px",
+                        letterSpacing: "0.06em"
+                      }}
+                    >
+                      NO CC REQUIRED
+                    </span>
+                  </div>
+                  <p className="mut sm" style={{ margin: "0 0 12px", fontSize: "12px", lineHeight: "1.4" }}>
+                    Experience every mastery tree, exercise video breakdown, and guided routine with 0 commitment.
+                  </p>
+                  <button
+                    className="btn"
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      background: "linear-gradient(135deg, #ff6b2c 0%, #ff944d 100%)",
+                      color: "#000",
+                      fontWeight: "900",
+                      fontSize: "13px",
+                      padding: "11px",
+                      boxShadow: "0 4px 18px rgba(255, 107, 44, 0.3)"
+                    }}
+                    disabled={isClaimingTrial}
+                    onClick={handleClaimTrial}
+                  >
+                    {isClaimingTrial ? "Activating 3-Day Pass..." : "⚡ Start 3-Day Free Trial Now"}
+                  </button>
+                </div>
+              )}
 
               {/* Interactive Pricing Options */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
