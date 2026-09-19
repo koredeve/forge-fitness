@@ -130,7 +130,7 @@ You don't need heavy iron to progressively overload your muscles:
 
 export default function CoachAssistant() {
   const { startWorkout, customRoutines, showToast } = useFitness();
-  const { user } = useAuth();
+  const { user, openAuthModal } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -271,6 +271,10 @@ ${matchedEx.bd.map((b) => `  ✖ ${b}`).join("\n")}
   };
 
   const handleSend = (textToSend = null) => {
+    if (!user) {
+      openAuthModal("Sign in or create a free account to consult Coach on form, biomechanics, and workout splits.", "signup");
+      return;
+    }
     const query = textToSend || input;
     if (!query.trim()) return;
 
@@ -304,6 +308,10 @@ ${matchedEx.bd.map((b) => `  ✖ ${b}`).join("\n")}
         <button
           onClick={() => {
             haptics.light();
+            if (!user) {
+              openAuthModal("Sign in or create a free account to consult Coach on form, biomechanics, and workout splits.", "signup");
+              return;
+            }
             setIsOpen(!isOpen);
           }}
           style={{
