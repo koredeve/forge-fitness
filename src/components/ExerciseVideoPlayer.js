@@ -157,8 +157,32 @@ export default function ExerciseVideoPlayer({ exerciseId, exerciseName, category
           autoPlay
           playsInline
           preload="metadata"
+          controlsList="nodownload noplaybackrate nofullscreen"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
           onTimeUpdate={handleTimeUpdate}
-          style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+            pointerEvents: "none",
+            userSelect: "none",
+            WebkitTouchCallout: "none"
+          }}
+        />
+
+        {/* Protective Guard Shield */}
+        <div
+          className="video-guard-shield"
+          onContextMenu={(e) => e.preventDefault()}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 4,
+            userSelect: "none",
+            WebkitTouchCallout: "none"
+          }}
         />
 
         {/* Video HUD Overlays - Top Only */}

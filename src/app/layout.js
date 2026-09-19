@@ -18,6 +18,8 @@ const archivo = Archivo({
   display: "swap",
 });
 
+import SecurityShield from "@/components/SecurityShield";
+
 export const viewport = {
   themeColor: "#0b0d10",
   width: "device-width",
@@ -79,6 +81,7 @@ export default function RootLayout({ children }) {
       <body className={`${inter.className}`}>
         <AuthProvider>
           <FitnessProvider>
+            <SecurityShield />
             <Navbar />
             <main>{children}</main>
             <WorkoutPlayer />

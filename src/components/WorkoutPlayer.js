@@ -4,6 +4,13 @@ import { useFitness } from "@/context/FitnessContext";
 import { EXDB, SKILLS, EXERCISE_SKILL_MAP } from "@/data/db";
 import { haptics } from "@/lib/haptics";
 import FlexCardModal from "@/components/FlexCardModal";
+import {
+  playHarmonicChime,
+  playHalfwayChime,
+  playRestChime,
+  playVictoryChime,
+  playCountdownPip
+} from "@/lib/chimes";
 
 // Video and image media definitions
 const EXERCISE_MEDIA = {
@@ -80,15 +87,15 @@ export default function WorkoutPlayer() {
     return skillIds.map((id) => SKILLS.find((s) => s.id === id)).filter(Boolean);
   }, [activeSession]);
 
-  // Clear, natural, audible voice coach (rate: 0.88, loud and distinct)
+  // Clear, natural, audible voice coach (concise, never overlapping or rushing)
   const speakVoice = (text) => {
     if (!soundEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
     try {
       window.speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
-      utter.rate = 0.88; // Slower, clear, and perfectly audible
+      utter.rate = 0.95; // Slower, clear, and perfectly audible
       utter.pitch = 1.0;
-      utter.volume = 1.0;
+      utter.volume = 0.9;
       window.speechSynthesis.speak(utter);
     } catch (e) {
       // Speech fallback
@@ -154,7 +161,8 @@ export default function WorkoutPlayer() {
       setStartTime(Date.now());
       if (steps[0]) {
         setTimer(steps[0].t || 0);
-        speakVoice(`Get ready. First exercise is ${steps[0].x}. Target: ${steps[0].target}.`);
+        playHarmonicChime(soundEnabled);
+        speakVoice(`Get ready: ${steps[0].x}`);
       }
     }
   }, [activeSession, steps]);
@@ -185,16 +193,16 @@ export default function WorkoutPlayer() {
 
       if (st.p === "WORK") {
         haptics.medium();
-        playBeep(880, 0.25);
+        playHarmonicChime(soundEnabled);
         if (st.rep) {
-          speakVoice(`Set ${st.set}. Do ${st.rep} reps of ${st.x}. Tap the green button when finished.`);
+          speakVoice(`Set ${st.set}: ${st.rep} reps`);
         } else {
-          speakVoice(`Set ${st.set}. Hold ${st.x} for ${st.t} seconds.`);
+          speakVoice(`Set ${st.set}: ${st.t} seconds`);
         }
       } else if (st.p === "REST") {
         haptics.light();
-        playBeep(520, 0.25);
-        speakVoice(`Set complete! Take a rest for ${st.t} seconds.`);
+        playRestChime(soundEnabled);
+        speakVoice(`Rest: ${st.t} seconds`);
       }
     }
   };
@@ -211,9 +219,8 @@ export default function WorkoutPlayer() {
       min: mins,
       exercises: activeSession.ex.map((e) => e.x)
     });
-    playBeep(880, 0.15);
-    setTimeout(() => playBeep(1200, 0.35), 220);
-    speakVoice(`Congratulations! Workout complete! You earned ${earnedXp + 50} experience points.`);
+    playVictoryChime(soundEnabled);
+    speakVoice(`Workout complete! Incredible work.`);
   };
 
   useEffect(() => {
@@ -226,7 +233,7 @@ export default function WorkoutPlayer() {
       setTimer((prev) => {
         if (prev > 0) {
           if (prev <= 3 && prev >= 1) {
-            playBeep(700, 0.08);
+            playCountdownPip(soundEnabled, prev === 1);
             haptics.countdown();
           }
           if (prev === 1) {
@@ -362,21 +369,41 @@ export default function WorkoutPlayer() {
             }}
           >
             {viewMode === "video" && media.video ? (
-              <video
-                ref={videoRef}
-                src={media.video}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="metadata"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                  display: "block"
-                }}
-              />
+              <>
+                <video
+                  ref={videoRef}
+                  src={media.video}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  controlsList="nodownload noplaybackrate nofullscreen"
+                  disablePictureInPicture
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    display: "block",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    WebkitTouchCallout: "none"
+                  }}
+                />
+                {/* Proprietary Protective Video Guard Shield */}
+                <div
+                  className="video-guard-shield"
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    zIndex: 2,
+                    userSelect: "none",
+                    WebkitTouchCallout: "none"
+                  }}
+                />
+              </>
             ) : (
               <img
                 src={media.img}
