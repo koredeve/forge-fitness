@@ -149,7 +149,7 @@ export default function FlexCardModal({ isOpen, onClose, data }) {
     ctx.font = "700 28px Inter, sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
     ctx.textAlign = "center";
-    ctx.fillText("forgecali.vercel.app", 540, 1780);
+    ctx.fillText("forgehim.vercel.app", 540, 1780);
 
     return canvas;
   };
@@ -199,13 +199,13 @@ export default function FlexCardModal({ isOpen, onClose, data }) {
         } else if (navigator.share) {
           await navigator.share({
             title: `FORGE Achievement · ${title}`,
-            text: `Crushed ${title} on FORGE! Streak: ${streak} days 🔥 Mastery: ${masteryPct}%\nJoin at https://forgecali.vercel.app`,
-            url: "https://forgecali.vercel.app"
+            text: `Crushed ${title} on FORGE! Streak: ${streak} days 🔥 Mastery: ${masteryPct}%\nJoin at https://forgehim.vercel.app`,
+            url: "https://forgehim.vercel.app"
           });
           haptics.success();
         } else {
           // Fallback to clipboard copy
-          await navigator.clipboard.writeText(`🏆 Crushed ${title} on FORGE! Streak: ${streak} days 🔥 Check it out: https://forgecali.vercel.app`);
+          await navigator.clipboard.writeText(`🏆 Crushed ${title} on FORGE! Streak: ${streak} days 🔥 Check it out: https://forgehim.vercel.app`);
           showToast("Achievement link copied to clipboard! 📋");
           haptics.success();
         }
@@ -287,7 +287,7 @@ export default function FlexCardModal({ isOpen, onClose, data }) {
 
           <div style={{ marginTop: "14px", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "8px", textAlign: "center" }}>
             <span style={{ fontSize: "10.5px", color: "var(--mut)" }}>
-              forgecali.vercel.app · Your Body Is The Barbell
+              forgehim.vercel.app · Your Body Is The Barbell
             </span>
           </div>
         </div>

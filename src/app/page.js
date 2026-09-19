@@ -112,15 +112,15 @@ export default function Home() {
           }}
         >
           <div className="kick" style={{ alignSelf: "flex-start", marginBottom: "8px" }}>
-            🔥 TODAY · {dateStr} {user ? `· ☁️ ${user.email.split("@")[0]}` : "· ⚡ PREVIEW MODE"}
+            🔥 TODAY · {dateStr} {user ? `· ☁️ ${user.email.split("@")[0]}` : "· ⚡ FORGE HIM PREVIEW"}
           </div>
 
           <h1 className="pg" style={{ margin: "4px 0" }}>
-            Own your<br />
-            <em>bodyweight.</em>
+            Forge your<br />
+            <em>power.</em>
           </h1>
           <p className="sub" style={{ margin: "6px 0 16px", maxWidth: "600px" }}>
-            FORGE is built calisthenics-first: your body is the barbell. Master bodyweight physics, climb the skill trees, and unlock elite relative strength.
+            FORGE HIM is precision-engineered for men: bodyweight leverage mastery, explosive relative power, progressive skill trees, and elite upper-body architecture.
           </p>
 
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>

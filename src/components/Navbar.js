@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import ForgeHimLogo from "./ForgeHimLogo";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -34,8 +35,8 @@ export default function Navbar() {
       {/* Top Header for Desktop & Mobile Header Bar */}
       <header>
         <div className="nav">
-          <Link href="/" className="logo" onClick={() => setMobileMenuOpen(false)}>
-            FORGE<i>.</i>
+          <Link href="/" className="logo-link" onClick={() => setMobileMenuOpen(false)} style={{ textDecoration: "none" }}>
+            <ForgeHimLogo size="default" />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -53,6 +54,31 @@ export default function Navbar() {
 
           {/* Right Action Area */}
           <div style={{ marginLeft: "auto", display: "flex", gap: "8px", alignItems: "center" }}>
+            {/* Ecosystem cross-link to ForgeHer */}
+            <a
+              href="https://forgeher.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ecosystem-pill"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "5px 9px",
+                borderRadius: "100px",
+                background: "rgba(255, 112, 166, 0.12)",
+                border: "1px solid rgba(255, 112, 166, 0.35)",
+                color: "#FF85A1",
+                fontSize: "11px",
+                fontWeight: "800",
+                textDecoration: "none",
+                letterSpacing: "0.03em"
+              }}
+              title="Switch to FORGE HER (Women's Calisthenics)"
+            >
+              <span>HER</span>
+              <span style={{ fontSize: "10px" }}>↗</span>
+            </a>
             {!isPro ? (
               <button
                 className="btn sm"
@@ -168,9 +194,7 @@ export default function Navbar() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <div className="logo" style={{ fontSize: "22px" }}>
-                FORGE<i>.</i>
-              </div>
+              <ForgeHimLogo size="small" />
               <button
                 className="xbtn"
                 style={{ fontSize: "22px" }}

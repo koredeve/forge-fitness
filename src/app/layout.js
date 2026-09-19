@@ -30,14 +30,14 @@ export const viewport = {
 };
 
 export const metadata = {
-  metadataBase: new URL("https://forgecali.vercel.app"),
-  title: "FORGE — Calisthenics-First Fitness",
-  description: "Own your bodyweight. Calisthenics first, hybrid always. Progressive mastery ladders, photorealistic movement guides, and voice-coached training.",
-  applicationName: "FORGE",
+  metadataBase: new URL("https://forgehim.vercel.app"),
+  title: "FORGE HIM — Elite Calisthenics & Bodyweight Architecture for Men",
+  description: "Master bodyweight leverage, explosive relative strength, and progressive calisthenics skill trees. Precision-engineered for the male physique.",
+  applicationName: "FORGE HIM",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "FORGE",
+    title: "FORGE HIM",
   },
   formatDetection: {
     telephone: false,
@@ -49,15 +49,15 @@ export const metadata = {
   manifest: "/manifest.json",
   openGraph: {
     type: "website",
-    siteName: "FORGE Fitness",
-    title: "FORGE — Calisthenics-First Fitness",
-    description: "Own your bodyweight. Calisthenics first, hybrid always. Master progressive bodyweight skills.",
+    siteName: "FORGE HIM",
+    title: "FORGE HIM — Elite Calisthenics & Bodyweight Architecture for Men",
+    description: "Master bodyweight leverage, explosive relative strength, and progressive calisthenics skill trees. Precision-engineered for the male physique.",
     images: [
       {
         url: "/banners/hero.jpg",
         width: 1200,
         height: 630,
-        alt: "FORGE Fitness",
+        alt: "FORGE HIM Calisthenics",
       },
     ],
   },

@@ -50,7 +50,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin", sub
     } catch (err) {
       console.error("Google Auth Error:", err);
       if (err.code === "auth/unauthorized-domain") {
-        setError("Domain not authorized. Please ensure 'forgecali.vercel.app' is added to Firebase Console -> Authentication -> Settings -> Authorized domains.");
+        setError("Domain not authorized. Please ensure 'forgehim.vercel.app' is added to Firebase Console -> Authentication -> Settings -> Authorized domains.");
       } else if (err.code === "auth/popup-closed-by-user" || err.code === "auth/popup-blocked") {
         setError("Google sign-in popup was closed or blocked. On mobile, redirect has been initiated, or you can use Email/Password sign up above.");
       } else if (err.code === "auth/operation-not-allowed" || err.code === "auth/configuration-not-found") {
